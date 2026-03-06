@@ -46,6 +46,7 @@ let currentMode = "win";
 let selectedGame = "";
 let selectedGamePath = "";
 let hubAnimationTimer = null;
+let pendingLoseHubSnapshot = null;
 
 function readLoseHubSnapshot() {
   try {
@@ -137,6 +138,7 @@ function initializeFromQuery() {
 
   if (currentMode === "lose" && snapshot) {
     displayedHubValues.lose = snapshot;
+    pendingLoseHubSnapshot = snapshot;
   }
 
   if (targetScreen !== "difficulty") {
@@ -243,7 +245,6 @@ backBtn.addEventListener("click", () => {
 });
 
 difficultyBackBtn.addEventListener("click", () => {
-  clearLoseHubSnapshot();
   showScreen("hub");
 });
 
@@ -262,8 +263,17 @@ function showScreen(screenName) {
   } else if (screenName === "hub") {
     hubScreen.classList.add("active");
     hubAnimationTimer = setTimeout(() => {
-      updateHub(currentMode, { animate: true });
-      if (currentMode === "lose") clearLoseHubSnapshot();
+      const snapshotStart = currentMode === "lose" ? pendingLoseHubSnapshot : null;
+      updateHub(currentMode, {
+        animate: true,
+        startFrom: snapshotStart
+      });
+
+      if (currentMode === "lose") {
+        pendingLoseHubSnapshot = null;
+        clearLoseHubSnapshot();
+      }
+
       hubAnimationTimer = null;
     }, 200);
   } else if (screenName === "difficulty") {
@@ -272,7 +282,7 @@ function showScreen(screenName) {
 }
 
 function updateHub(mode, options = {}) {
-  const { animate = true, preserveDisplayedValues = false } = options;
+  const { animate = true, preserveDisplayedValues = false, startFrom = null } = options;
   const data = appData[mode];
   const targetScore = clamp(data.score, 0, 100);
   const targetStreak = Math.max(0, Math.floor(data.streak));
@@ -288,8 +298,12 @@ function updateHub(mode, options = {}) {
   }
 
   const displayed = displayedHubValues[mode] || { score: targetScore, streak: targetStreak };
-  const fromScore = displayed.score;
-  const fromStreak = displayed.streak;
+  const fromScore = Number.isFinite(startFrom?.score)
+    ? clamp(startFrom.score, 0, 100)
+    : displayed.score;
+  const fromStreak = Number.isFinite(startFrom?.streak)
+    ? Math.max(0, Math.floor(startFrom.streak))
+    : displayed.streak;
 
 
   if (!animate) {
