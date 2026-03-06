@@ -434,7 +434,7 @@ paddle.y = paddle.baseY;
     ball.stuck = true;
     ball.speedScale = 1;
     ball.r = ball.baseR;
-    ball.x = paddle.x + paddle.w / 2;
+    ball.x = paddle.bodyX + paddle.baseWidth / 2;
     ball.y = paddle.y - ball.r - 2;
 
     const dir = Math.random() < 0.5 ? -1 : 1;
@@ -772,6 +772,48 @@ paddle.y = paddle.baseY ?? paddle.y;
     showOverlay("Tap / Click to Start", "Destroy all boxes to win.");
   }
 
+  function restartCurrentLevel() {
+    state.elapsedMs = 0;
+    state.startTimeMs = null;
+    state.pausedDurationMs = 0;
+    state.overlayShownAtMs = null;
+    state.won = false;
+    state.lost = false;
+    state.resurrectionsLeft = 3;
+    state.lives = 5;
+    livesEl.textContent = "5";
+    timerEl.textContent = "00:00";
+
+    createBricks(state.level);
+    clearTransientEffects();
+    layout();
+    resetBall();
+
+    clearAllPowers();
+    paddle.playerMaxStep = Infinity;
+    missiles.length = 0;
+    lastMissileShot = 0;
+    awaitingLossChoice = false;
+    levelBriefingPending = false;
+
+    pausedOnOverlay = false;
+    running = true;
+
+    const now = performance.now();
+    state.startTimeMs = now;
+    state.pausedDurationMs = 0;
+    state.overlayShownAtMs = now;
+
+    hideOverlay();
+
+    if (state.level === 4) {
+      ball.stuck = true;
+      return;
+    }
+
+    ball.stuck = false;
+  }
+
   // --------------------
   // INPUT
   // --------------------
@@ -826,12 +868,21 @@ function movePaddle(clientX) {
       return;
     }
 
-    if (state.won || state.lost) resetGame();
+    if (state.won) {
+      restartCurrentLevel();
+      return;
+    }
+
+    if (state.lost) {
+      resetGame();
+      return;
+    }
+
     else handleGameStart();
   });
 
   exitBtn.addEventListener("click", () => {
-    if (!awaitingLossChoice) return;
+    if (!awaitingLossChoice && !state.won) return;
 
     window.location.href = "../../index.html?screen=difficulty&game=Game%201&path=games/game1/index.html";
   });
@@ -1833,7 +1884,12 @@ paddle.assistDisplayDirection = 0;
     if (remainingBricks() === 0) {
       state.won = true;
       running = false;
-      showOverlay("You Win!", `Cleared level ${state.level} in ${formatElapsed(state.elapsedMs)}. Press R or Restart.`);
+      pausedOnOverlay = true;
+      showOverlay("You Win!", `Cleared level ${state.level} in ${formatElapsed(state.elapsedMs)}.`, {
+        buttonLabel: "Try again",
+        showExit: true,
+        exitLabel: "Exit"
+      });
       clearAllPowers();
       paddle.playerMaxStep = Infinity;
       paddle.assistLatched = false;
