@@ -48,9 +48,7 @@ let selectedGamePath = "";
 let hubAnimationTimer = null;
 let pendingLoseHubSnapshot = null;
 
-function logFailometer(stage, details = {}) {
-  console.log(`[Failometer] ${stage}`, details);
-}
+function logFailometer() {}
 
 function readLoseHubSnapshot() {
   try {
