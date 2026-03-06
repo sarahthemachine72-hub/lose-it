@@ -212,11 +212,9 @@ modeButtons.forEach((button) => {
 gameTiles.forEach((tile) => {
   tile.addEventListener("click", () => {
     if (currentMode === "lose") {
-      const shownScore = Number.parseInt(meterScore.textContent || "", 10);
-      const shownStreak = Number.parseInt(streakCount.textContent || "", 10);
       writeLoseHubSnapshot({
-        score: Number.isFinite(shownScore) ? clamp(shownScore, 0, 100) : displayedHubValues.lose.score,
-        streak: Number.isFinite(shownStreak) ? Math.max(0, shownStreak) : displayedHubValues.lose.streak
+        score: clamp(appData.lose.score, 0, 100),
+        streak: Math.max(0, Math.floor(appData.lose.streak))
       });
     } else {
       clearLoseHubSnapshot();
