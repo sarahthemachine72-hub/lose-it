@@ -27,12 +27,12 @@
       <button id="back-btn" class="back-btn" aria-label="Go back">←</button>
       <h2 id="mode-title">WIN MODE</h2>
     </header>
-  
+
     <div class="top-panel">
       <div class="meter-section">
         <div class="meter-card">
           <div class="meter-label" id="meter-label">WINOMETER</div>
-  
+
           <div class="meter-wrap">
             <svg class="semi-meter" viewBox="0 0 220 130" aria-hidden="true">
               <path
@@ -47,51 +47,52 @@
                 pathLength="100"
               />
             </svg>
-  
+
             <div class="meter-value">
               <span id="meter-score">0</span>
               <small>/100</small>
+              <div class="meter-tier" id="meter-tier">Not a winner</div>
             </div>
           </div>
         </div>
-  
+
         <div class="streak-card">
           <div class="streak-label">STREAK</div>
           <div class="streak-value" id="streak-count">0</div>
         </div>
       </div>
     </div>
-  
+
     <main class="games-section">
       <h3 class="games-title">Choose a game</h3>
-  
+
       <div class="games-grid" id="games-grid">
         <div class="games-grid" id="games-grid">
             <button class="game-tile" data-game="Game 1" data-path="games/game1/index.html">
               <span class="game-icon">🎯</span>
               <span class="game-name">Game 1</span>
             </button>
-  
+
         <button class="game-tile" data-game="Game 2">
           <span class="game-icon">🧩</span>
           <span class="game-name">Game 2</span>
         </button>
-  
+
         <button class="game-tile" data-game="Game 3">
           <span class="game-icon">⚡</span>
           <span class="game-name">Game 3</span>
         </button>
-  
+
         <button class="game-tile" data-game="Game 4">
           <span class="game-icon">🎲</span>
           <span class="game-name">Game 4</span>
         </button>
-  
+
         <button class="game-tile" data-game="Game 5">
           <span class="game-icon">🕹️</span>
           <span class="game-name">Game 5</span>
         </button>
-  
+
         <button class="game-tile" data-game="Game 6">
           <span class="game-icon">🏁</span>
           <span class="game-name">Game 6</span>
@@ -99,17 +100,17 @@
       </div>
     </main>
   </section>
-  
+
   <!-- Difficulty Screen -->
   <section id="difficulty-screen" class="screen">
     <header class="hub-header">
       <button id="difficulty-back-btn" class="back-btn" aria-label="Go back">←</button>
       <h2 id="difficulty-title">GAME 1</h2>
     </header>
-  
+
     <div class="difficulty-content">
       <h3 class="difficulty-subtitle">Choose difficulty</h3>
-  
+
       <div class="difficulty-buttons">
         <button class="difficulty-btn" data-difficulty="easy">EASY</button>
         <button class="difficulty-btn" data-difficulty="normal">NORMAL</button>

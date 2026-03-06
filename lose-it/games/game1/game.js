@@ -13,9 +13,11 @@
   const overlayStats = document.getElementById("overlayStats");
   const overlayMeter = document.getElementById("overlayMeter");
   const overlayMeterScore = document.getElementById("overlayMeterScore");
+  const overlayMeterTier = document.getElementById("overlayMeterTier");
   const overlayMeterProgress = document.getElementById("overlayMeterProgress");
   const overlayFeatures = document.getElementById("overlayFeatures");
   const startBtn = document.getElementById("startBtn");
+  const restoreBtn = document.getElementById("restoreBtn");
   const exitBtn = document.getElementById("exitBtn");
   const DEBUG_DISABLE_ASSIST = false;
   const params = new URLSearchParams(window.location.search);
@@ -66,8 +68,10 @@
   function reportGameOutcome(outcome) {
     const scoreDelta = getScoreDelta(outcome);
     const metrics = readMetrics();
-    const nextScore = clamp(metrics.failometerScore + scoreDelta, 0, 100);
-    const nextStreak = outcome === "loss" ? metrics.lossStreak + 1 : 0;
+    const previousScore = clamp(metrics.failometerScore, 0, 100);
+    const previousStreak = Math.max(0, Math.floor(metrics.lossStreak));
+    const nextScore = clamp(previousScore + scoreDelta, 0, 100);
+    const nextStreak = outcome === "loss" ? previousStreak + 1 : 0;
 
     localStorage.setItem(
       METRICS_STORAGE_KEY,
@@ -77,7 +81,76 @@
       })
     );
 
-    return { score: nextScore, streak: nextStreak, scoreDelta };
+    return {
+      score: nextScore,
+      streak: nextStreak,
+      scoreDelta,
+      outcome,
+      previousScore,
+      previousStreak
+    };
+  }
+
+  function getMeterTierText(score) {
+    const safeScore = clamp(score, 0, 100);
+
+    if (safeScore < 20) return "not a loser";
+    if (safeScore < 40) return "wannabe loser";
+    if (safeScore < 60) return "loser in training";
+    if (safeScore < 80) return "disappointing your parents";
+    return "failure is your middle name";
+  }
+
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function animateNumber(from, to, duration, onUpdate, onDone) {
+    const startTime = performance.now();
+
+    function frame(now) {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = easeOutCubic(progress);
+      const value = Math.round(from + (to - from) * eased);
+      onUpdate(value);
+
+      if (progress < 1) {
+        requestAnimationFrame(frame);
+        return;
+      }
+
+      if (onDone) onDone();
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  const initialMetrics = readMetrics();
+  let lastOverlayScore = Math.max(0, Math.min(100, Number(initialMetrics.failometerScore) || 0));
+  let lastOverlayStreak = Math.max(0, Math.floor(Number(initialMetrics.lossStreak) || 0));
+  let restoreState = null;
+
+  function restorePreviousMetrics() {
+    if (!restoreState) return;
+
+    localStorage.setItem(
+      METRICS_STORAGE_KEY,
+      JSON.stringify({
+        failometerScore: restoreState.score,
+        lossStreak: restoreState.streak
+      })
+    );
+
+    const restoredStats = {
+      score: restoreState.score,
+      streak: restoreState.streak,
+      previousScore: lastOverlayScore,
+      previousStreak: lastOverlayStreak
+    };
+
+    restoreBtn.classList.add("is-hidden");
+    restoreState = null;
+    renderOverlayStats(restoredStats);
   }
 
   function renderOverlayStats(stats) {
@@ -85,15 +158,33 @@
       overlayStats.textContent = "";
       overlayStats.classList.remove("is-visible");
       overlayMeter.classList.remove("is-visible");
+      overlayMeterScore.textContent = "0";
+      overlayMeterTier.textContent = getMeterTierText(0);
       return;
     }
 
-    overlayStats.textContent = `Failometer: ${stats.score}/100 · Loss Streak: ${stats.streak}`;
-    overlayStats.classList.add("is-visible");
+    const targetScore = clamp(stats.score, 0, 100);
+    const targetStreak = Math.max(0, Math.floor(stats.streak));
+    const startScore = Number.isFinite(stats.previousScore) ? clamp(stats.previousScore, 0, 100) : lastOverlayScore;
+    const startStreak = Number.isFinite(stats.previousStreak) ? Math.max(0, Math.floor(stats.previousStreak)) : lastOverlayStreak;
 
-    overlayMeterScore.textContent = String(stats.score);
-    overlayMeterProgress.style.strokeDashoffset = String(100 - clamp(stats.score, 0, 100));
+    overlayStats.classList.add("is-visible");
     overlayMeter.classList.add("is-visible");
+
+    animateNumber(startScore, targetScore, 650, (value) => {
+      overlayMeterScore.textContent = String(value);
+      overlayMeterTier.textContent = getMeterTierText(value);
+      overlayMeterProgress.style.strokeDashoffset = String(100 - clamp(value, 0, 100));
+    });
+
+    animateNumber(startStreak, targetStreak, 650, (value) => {
+      overlayStats.textContent = `Failometer: ${targetScore}/100 · Loss Streak: ${value}`;
+    }, () => {
+      overlayStats.textContent = `Failometer: ${targetScore}/100 · Loss Streak: ${targetStreak}`;
+    });
+
+    lastOverlayScore = targetScore;
+    lastOverlayStreak = targetStreak;
   }
 
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -702,6 +793,17 @@ paddle.y = paddle.baseY;
     startBtn.textContent = options.buttonLabel || "Start";
     exitBtn.textContent = options.exitLabel || "Exit";
     exitBtn.classList.toggle("is-hidden", !options.showExit);
+    restoreBtn.classList.toggle("is-hidden", !options.showRestore);
+
+    if (options.restoreStats) {
+      restoreState = {
+        score: options.restoreStats.score,
+        streak: options.restoreStats.streak
+      };
+    } else {
+      restoreState = null;
+    }
+
     renderOverlayStats(options.stats || null);
     renderOverlayFeatures(options.features || []);
     overlay.classList.remove("is-hidden");
@@ -933,6 +1035,10 @@ function movePaddle(clientX) {
     if (e.key === "2") beginLevel2(true);
     if (e.key === "3") beginLevel3(true);
     if (e.key === "4") beginLevel4(true);
+  });
+
+  restoreBtn.addEventListener("click", () => {
+    restorePreviousMetrics();
   });
 
   startBtn.addEventListener("click", () => {
@@ -1969,6 +2075,8 @@ paddle.assistDisplayDirection = 0;
         buttonLabel: "Try again",
         showExit: true,
         exitLabel: "Exit",
+        showRestore: true,
+        restoreStats: { score: stats.previousScore, streak: stats.previousStreak },
         stats
       });
       clearAllPowers();
