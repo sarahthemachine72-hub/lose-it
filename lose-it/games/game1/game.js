@@ -1023,6 +1023,29 @@ paddle.y = paddle.baseY ?? paddle.y;
     ball.stuck = false;
   }
 
+  function triggerInstantLoss() {
+    if (state.level !== 1 || !running || pausedOnOverlay || state.won || state.lost || awaitingLossChoice) return;
+
+    state.lives = 0;
+    livesEl.textContent = "0";
+    clearAllPowers();
+    paddle.playerMaxStep = Infinity;
+    paddle.assistLatched = false;
+    paddle.assistTargetW = paddle.baseWidth;
+    paddle.assistTargetExt = 0;
+    paddle.assistDirection = 0;
+    paddle.assistDisplayDirection = 0;
+    missiles.length = 0;
+    lastMissileShot = 0;
+
+    if (hasDifficulty) {
+      openDifficultyLevelChoiceOverlay();
+      return;
+    }
+
+    goToNextLevelAfterLoss();
+  }
+
   // --------------------
   // INPUT
   // --------------------
@@ -1060,6 +1083,7 @@ function movePaddle(clientX) {
 
   window.addEventListener("keydown", (e) => {
     if (e.key.toLowerCase() === "r") resetGame();
+    if (e.key.toLowerCase() === "l") triggerInstantLoss();
     if (e.key === "2") beginLevel2(true);
     if (e.key === "3") beginLevel3(true);
     if (e.key === "4") beginLevel4(true);
