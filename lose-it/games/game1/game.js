@@ -11,6 +11,9 @@
   const overlayTitle = document.getElementById("overlayTitle");
   const overlaySubtitle = document.getElementById("overlaySubtitle");
   const overlayStats = document.getElementById("overlayStats");
+  const overlayMeter = document.getElementById("overlayMeter");
+  const overlayMeterScore = document.getElementById("overlayMeterScore");
+  const overlayMeterProgress = document.getElementById("overlayMeterProgress");
   const overlayFeatures = document.getElementById("overlayFeatures");
   const startBtn = document.getElementById("startBtn");
   const exitBtn = document.getElementById("exitBtn");
@@ -21,6 +24,18 @@
   const difficulty = receivedDifficulty || "normal";
 
   const METRICS_STORAGE_KEY = "loseItMetricsV1";
+  const MODE_STORAGE_KEY = "loseItModeV1";
+
+  const requestedMode = params.get("mode");
+  const storedMode = localStorage.getItem(MODE_STORAGE_KEY);
+  const currentMode = requestedMode === "win" || requestedMode === "lose"
+    ? requestedMode
+    : (storedMode === "win" || storedMode === "lose" ? storedMode : "win");
+
+  if (requestedMode !== currentMode) {
+    localStorage.setItem(MODE_STORAGE_KEY, currentMode);
+  }
+
   const failometerByDifficulty = {
     easy: { loss: 4, win: -8 },
     normal: { loss: 8, win: -6 },
@@ -69,11 +84,16 @@
     if (!stats) {
       overlayStats.textContent = "";
       overlayStats.classList.remove("is-visible");
+      overlayMeter.classList.remove("is-visible");
       return;
     }
 
     overlayStats.textContent = `Failometer: ${stats.score}/100 · Loss Streak: ${stats.streak}`;
     overlayStats.classList.add("is-visible");
+
+    overlayMeterScore.textContent = String(stats.score);
+    overlayMeterProgress.style.strokeDashoffset = String(100 - clamp(stats.score, 0, 100));
+    overlayMeter.classList.add("is-visible");
   }
 
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -943,7 +963,7 @@ function movePaddle(clientX) {
   exitBtn.addEventListener("click", () => {
     if (!awaitingLossChoice && !state.won) return;
 
-    window.location.href = "../../index.html?screen=difficulty&game=Game%201&path=games/game1/index.html";
+    window.location.href = `../../index.html?screen=difficulty&game=Game%201&path=games/game1/index.html&mode=${encodeURIComponent(currentMode)}`;
   });
 
   restartBtn.addEventListener("click", () => {
@@ -951,7 +971,7 @@ function movePaddle(clientX) {
   });
 
   hudExitBtn.addEventListener("click", () => {
-    window.location.href = "../../index.html?screen=difficulty&game=Game%201&path=games/game1/index.html";
+    window.location.href = `../../index.html?screen=difficulty&game=Game%201&path=games/game1/index.html&mode=${encodeURIComponent(currentMode)}`;
   });
 
     // --------------------

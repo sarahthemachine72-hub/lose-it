@@ -100,6 +100,76 @@ body {
   display: block;
 }
 
+.overlayMeter {
+  display: none;
+  margin: 0 0 12px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255, 92, 124, 0.1);
+  border: 1px solid rgba(255, 92, 124, 0.25);
+}
+
+.overlayMeter.is-visible {
+  display: block;
+}
+
+.overlayMeter__label {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: rgba(255, 170, 185, 0.92);
+  font-weight: 700;
+}
+
+.overlayMeter__wrap {
+  position: relative;
+  width: 100%;
+  max-width: 180px;
+  margin: 0 auto;
+}
+
+.overlayMeter__svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.overlayMeter__bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.16);
+  stroke-width: 16;
+  stroke-linecap: round;
+}
+
+.overlayMeter__progress {
+  fill: none;
+  stroke: #ff5c7c;
+  stroke-width: 16;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  transition: stroke-dashoffset 0.35s ease;
+}
+
+.overlayMeter__value {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  text-align: center;
+  color: #ffe7ec;
+}
+
+.overlayMeter__value span {
+  font-size: 1.4rem;
+  font-weight: 900;
+}
+
+.overlayMeter__value small {
+  display: block;
+  font-size: 0.72rem;
+  color: rgba(255, 230, 236, 0.78);
+}
+
 .cardFeatures {
   display: none;
   margin: 8px 0 14px;
