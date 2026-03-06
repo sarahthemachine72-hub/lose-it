@@ -1024,7 +1024,7 @@ paddle.y = paddle.baseY ?? paddle.y;
   }
 
   function triggerInstantLoss() {
-    if (state.level !== 1 || !running || pausedOnOverlay || state.won || state.lost || awaitingLossChoice) return;
+    if (!running || pausedOnOverlay || state.won || state.lost || awaitingLossChoice) return;
 
     state.lives = 0;
     livesEl.textContent = "0";
