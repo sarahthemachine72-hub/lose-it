@@ -20,6 +20,7 @@ const difficultyButtons = document.querySelectorAll(".difficulty-btn");
 
 const METRICS_STORAGE_KEY = "loseItMetricsV1";
 const MODE_STORAGE_KEY = "loseItModeV1";
+const LOSE_HUB_SNAPSHOT_KEY = "loseItLoseHubSnapshotV1";
 const defaultMetrics = {
   failometerScore: 0,
   lossStreak: 0
@@ -45,6 +46,33 @@ let currentMode = "win";
 let selectedGame = "";
 let selectedGamePath = "";
 let hubAnimationTimer = null;
+
+function readLoseHubSnapshot() {
+  try {
+    const raw = localStorage.getItem(LOSE_HUB_SNAPSHOT_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (!Number.isFinite(parsed.score) || !Number.isFinite(parsed.streak)) {
+      return null;
+    }
+
+    return {
+      score: clamp(parsed.score, 0, 100),
+      streak: Math.max(0, Math.floor(parsed.streak))
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+function writeLoseHubSnapshot(snapshot) {
+  localStorage.setItem(LOSE_HUB_SNAPSHOT_KEY, JSON.stringify(snapshot));
+}
+
+function clearLoseHubSnapshot() {
+  localStorage.removeItem(LOSE_HUB_SNAPSHOT_KEY);
+}
 
 function readMetrics() {
   try {
@@ -106,10 +134,16 @@ function initializeFromQuery() {
     }
   }
 
-  updateHub(currentMode, { animate: false });
-
   if (targetScreen !== "difficulty") {
+    updateHub(currentMode, { animate: false });
     return;
+  }
+
+  const snapshot = readLoseHubSnapshot();
+  if (currentMode === "lose" && snapshot) {
+    displayedHubValues.lose = snapshot;
+  } else {
+    updateHub(currentMode, { animate: false });
   }
 
   selectedGame = params.get("game") || "Game 1";
@@ -170,6 +204,17 @@ modeButtons.forEach((button) => {
 
 gameTiles.forEach((tile) => {
   tile.addEventListener("click", () => {
+    if (currentMode === "lose") {
+      const shownScore = Number.parseInt(meterScore.textContent || "", 10);
+      const shownStreak = Number.parseInt(streakCount.textContent || "", 10);
+      writeLoseHubSnapshot({
+        score: Number.isFinite(shownScore) ? clamp(shownScore, 0, 100) : displayedHubValues.lose.score,
+        streak: Number.isFinite(shownStreak) ? Math.max(0, shownStreak) : displayedHubValues.lose.streak
+      });
+    } else {
+      clearLoseHubSnapshot();
+    }
+
     selectedGame = tile.dataset.game;
     selectedGamePath = tile.dataset.path;
 
@@ -193,6 +238,7 @@ backBtn.addEventListener("click", () => {
 });
 
 difficultyBackBtn.addEventListener("click", () => {
+  clearLoseHubSnapshot();
   showScreen("hub");
 });
 
@@ -212,6 +258,7 @@ function showScreen(screenName) {
     hubScreen.classList.add("active");
     hubAnimationTimer = setTimeout(() => {
       updateHub(currentMode, { animate: true });
+      if (currentMode === "lose") clearLoseHubSnapshot();
       hubAnimationTimer = null;
     }, 200);
   } else if (screenName === "difficulty") {
