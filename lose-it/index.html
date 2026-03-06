@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LOSE IT!</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Home Screen -->
+    <section id="home-screen" class="screen active">
+      <div class="home-content">
+        <h1 class="app-title">LOSE IT!</h1>
+
+        <div class="menu-buttons">
+          <button class="main-btn win-btn" data-mode="win">WIN</button>
+          <button class="main-btn lose-btn" data-mode="lose">LOSE</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hub Screen -->
+   <!-- Hub Screen -->
+<section id="hub-screen" class="screen">
+    <header class="hub-header">
+      <button id="back-btn" class="back-btn" aria-label="Go back">←</button>
+      <h2 id="mode-title">WIN MODE</h2>
+    </header>
+  
+    <div class="top-panel">
+      <div class="meter-section">
+        <div class="meter-card">
+          <div class="meter-label" id="meter-label">WINOMETER</div>
+  
+          <div class="meter-wrap">
+            <svg class="semi-meter" viewBox="0 0 220 130" aria-hidden="true">
+              <path
+                class="meter-bg"
+                d="M 30 110 A 80 80 0 0 1 190 110"
+                pathLength="100"
+              />
+              <path
+                id="meter-progress"
+                class="meter-progress"
+                d="M 30 110 A 80 80 0 0 1 190 110"
+                pathLength="100"
+              />
+            </svg>
+  
+            <div class="meter-value">
+              <span id="meter-score">0</span>
+              <small>/100</small>
+            </div>
+          </div>
+        </div>
+  
+        <div class="streak-card">
+          <div class="streak-label">STREAK</div>
+          <div class="streak-value" id="streak-count">0</div>
+        </div>
+      </div>
+    </div>
+  
+    <main class="games-section">
+      <h3 class="games-title">Choose a game</h3>
+  
+      <div class="games-grid" id="games-grid">
+        <div class="games-grid" id="games-grid">
+            <button class="game-tile" data-game="Game 1" data-path="games/game1/index.html">
+              <span class="game-icon">🎯</span>
+              <span class="game-name">Game 1</span>
+            </button>
+  
+        <button class="game-tile" data-game="Game 2">
+          <span class="game-icon">🧩</span>
+          <span class="game-name">Game 2</span>
+        </button>
+  
+        <button class="game-tile" data-game="Game 3">
+          <span class="game-icon">⚡</span>
+          <span class="game-name">Game 3</span>
+        </button>
+  
+        <button class="game-tile" data-game="Game 4">
+          <span class="game-icon">🎲</span>
+          <span class="game-name">Game 4</span>
+        </button>
+  
+        <button class="game-tile" data-game="Game 5">
+          <span class="game-icon">🕹️</span>
+          <span class="game-name">Game 5</span>
+        </button>
+  
+        <button class="game-tile" data-game="Game 6">
+          <span class="game-icon">🏁</span>
+          <span class="game-name">Game 6</span>
+        </button>
+      </div>
+    </main>
+  </section>
+  
+  <!-- Difficulty Screen -->
+  <section id="difficulty-screen" class="screen">
+    <header class="hub-header">
+      <button id="difficulty-back-btn" class="back-btn" aria-label="Go back">←</button>
+      <h2 id="difficulty-title">GAME 1</h2>
+    </header>
+  
+    <div class="difficulty-content">
+      <h3 class="difficulty-subtitle">Choose difficulty</h3>
+  
+      <div class="difficulty-buttons">
+        <button class="difficulty-btn" data-difficulty="easy">EASY</button>
+        <button class="difficulty-btn" data-difficulty="normal">NORMAL</button>
+        <button class="difficulty-btn" data-difficulty="hard">HARD</button>
+        <button class="difficulty-btn" data-difficulty="extreme">EXTREME</button>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

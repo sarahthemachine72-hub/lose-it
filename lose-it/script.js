@@ -1,0 +1,127 @@
+const homeScreen = document.getElementById("home-screen");
+const hubScreen = document.getElementById("hub-screen");
+const difficultyScreen = document.getElementById("difficulty-screen");
+
+const backBtn = document.getElementById("back-btn");
+const difficultyBackBtn = document.getElementById("difficulty-back-btn");
+
+const modeTitle = document.getElementById("mode-title");
+const meterLabel = document.getElementById("meter-label");
+const meterScore = document.getElementById("meter-score");
+const streakCount = document.getElementById("streak-count");
+const meterProgress = document.getElementById("meter-progress");
+
+const difficultyTitle = document.getElementById("difficulty-title");
+
+const modeButtons = document.querySelectorAll(".main-btn");
+const gameTiles = document.querySelectorAll(".game-tile");
+const difficultyButtons = document.querySelectorAll(".difficulty-btn");
+
+const appData = {
+  win: {
+    score: 62,
+    streak: 4
+  },
+  lose: {
+    score: 81,
+    streak: 7
+  }
+};
+
+let currentMode = "win";
+let selectedGame = "";
+let selectedGamePath = "";
+
+modeButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    currentMode = button.dataset.mode;
+    updateHub(currentMode);
+    showScreen("hub");
+  });
+});
+
+gameTiles.forEach((tile) => {
+    tile.addEventListener("click", () => {
+      selectedGame = tile.dataset.game;
+      selectedGamePath = tile.dataset.path;
+  
+      difficultyTitle.textContent = selectedGame.toUpperCase();
+      showScreen("difficulty");
+    });
+  });
+
+  difficultyButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const difficulty = button.dataset.difficulty;
+  
+      if (!selectedGamePath) return;
+  
+      window.location.href = `${selectedGamePath}?difficulty=${encodeURIComponent(difficulty)}`;
+    });
+  });
+
+backBtn.addEventListener("click", () => {
+  showScreen("home");
+});
+
+difficultyBackBtn.addEventListener("click", () => {
+  showScreen("hub");
+});
+
+function showScreen(screenName) {
+  homeScreen.classList.remove("active");
+  hubScreen.classList.remove("active");
+  difficultyScreen.classList.remove("active");
+
+  if (screenName === "home") {
+    homeScreen.classList.add("active");
+  } else if (screenName === "hub") {
+    hubScreen.classList.add("active");
+  } else if (screenName === "difficulty") {
+    difficultyScreen.classList.add("active");
+  }
+}
+
+function updateHub(mode) {
+  const data = appData[mode];
+  const score = clamp(data.score, 0, 100);
+  const streak = data.streak;
+
+  if (mode === "win") {
+    modeTitle.textContent = "WIN MODE";
+    meterLabel.textContent = "WINOMETER";
+    meterProgress.style.stroke = "var(--accent-win)";
+  } else {
+    modeTitle.textContent = "LOSE MODE";
+    meterLabel.textContent = "FAILOMETER";
+    meterProgress.style.stroke = "var(--accent-lose)";
+  }
+
+  meterScore.textContent = score;
+  streakCount.textContent = streak;
+
+  const dashOffset = 100 - score;
+  meterProgress.style.strokeDashoffset = dashOffset;
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function updateFromGameResult(mode, result) {
+  if (!appData[mode]) return;
+
+  if (typeof result.scoreDelta === "number") {
+    appData[mode].score = clamp(appData[mode].score + result.scoreDelta, 0, 100);
+  }
+
+  if (typeof result.streak === "number") {
+    appData[mode].streak = result.streak;
+  }
+
+  if (mode === currentMode) {
+    updateHub(currentMode);
+  }
+}
+
+window.updateFromGameResult = updateFromGameResult;
