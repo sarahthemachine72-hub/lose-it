@@ -86,31 +86,23 @@ body {
 .cardTitle { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
 .cardSub { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
 
-.overlayStats {
+.overlayMeterPanel {
   display: none;
   margin: 0 0 12px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  font-size: 13px;
-  color: var(--text);
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
 }
 
-.overlayStats.is-visible {
-  display: block;
+.overlayMeterPanel.is-visible {
+  display: flex;
 }
 
 .overlayMeter {
-  display: none;
-  margin: 0 0 12px;
   padding: 10px;
   border-radius: 12px;
   background: rgba(255, 92, 124, 0.1);
   border: 1px solid rgba(255, 92, 124, 0.25);
-}
-
-.overlayMeter.is-visible {
-  display: block;
 }
 
 .overlayMeter__label {
@@ -177,6 +169,28 @@ body {
   text-transform: uppercase;
   color: rgba(255, 230, 236, 0.92);
   max-width: 160px;
+}
+
+.overlayStreakCard {
+  min-width: 92px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.overlayStreakCard__label {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.overlayStreakCard__value {
+  margin-top: 4px;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #ffe7ec;
 }
 
 .cardFeatures {

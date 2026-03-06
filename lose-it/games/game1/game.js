@@ -10,8 +10,9 @@
   const overlay = document.getElementById("overlay");
   const overlayTitle = document.getElementById("overlayTitle");
   const overlaySubtitle = document.getElementById("overlaySubtitle");
-  const overlayStats = document.getElementById("overlayStats");
+  const overlayMeterPanel = document.getElementById("overlayMeterPanel");
   const overlayMeter = document.getElementById("overlayMeter");
+  const overlayStreakValue = document.getElementById("overlayStreakValue");
   const overlayMeterScore = document.getElementById("overlayMeterScore");
   const overlayMeterTier = document.getElementById("overlayMeterTier");
   const overlayMeterProgress = document.getElementById("overlayMeterProgress");
@@ -129,6 +130,7 @@
   let lastOverlayScore = Math.max(0, Math.min(100, Number(initialMetrics.failometerScore) || 0));
   let lastOverlayStreak = Math.max(0, Math.floor(Number(initialMetrics.lossStreak) || 0));
   let restoreState = null;
+  let overlayStatsTimer = null;
 
   function restorePreviousMetrics() {
     if (!restoreState) return;
@@ -150,16 +152,23 @@
 
     restoreBtn.classList.add("is-hidden");
     restoreState = null;
-    renderOverlayStats(restoredStats);
+    renderOverlayStats(restoredStats, { delayAnimation: false });
   }
 
-  function renderOverlayStats(stats) {
+  function renderOverlayStats(stats, options = {}) {
+    const { delayAnimation = true } = options;
+
+    if (overlayStatsTimer) {
+      clearTimeout(overlayStatsTimer);
+      overlayStatsTimer = null;
+    }
+
     if (!stats) {
-      overlayStats.textContent = "";
-      overlayStats.classList.remove("is-visible");
-      overlayMeter.classList.remove("is-visible");
+      overlayMeterPanel.classList.remove("is-visible");
       overlayMeterScore.textContent = "0";
       overlayMeterTier.textContent = getMeterTierText(0);
+      overlayStreakValue.textContent = "0";
+      overlayMeterProgress.style.strokeDashoffset = "100";
       return;
     }
 
@@ -168,23 +177,38 @@
     const startScore = Number.isFinite(stats.previousScore) ? clamp(stats.previousScore, 0, 100) : lastOverlayScore;
     const startStreak = Number.isFinite(stats.previousStreak) ? Math.max(0, Math.floor(stats.previousStreak)) : lastOverlayStreak;
 
-    overlayStats.classList.add("is-visible");
-    overlayMeter.classList.add("is-visible");
+    overlayMeterPanel.classList.add("is-visible");
+    overlayMeterScore.textContent = String(startScore);
+    overlayMeterTier.textContent = getMeterTierText(startScore);
+    overlayStreakValue.textContent = String(startStreak);
+    overlayMeterProgress.style.strokeDashoffset = String(100 - clamp(startScore, 0, 100));
 
-    animateNumber(startScore, targetScore, 650, (value) => {
-      overlayMeterScore.textContent = String(value);
-      overlayMeterTier.textContent = getMeterTierText(value);
-      overlayMeterProgress.style.strokeDashoffset = String(100 - clamp(value, 0, 100));
-    });
+    const runAnimation = () => {
+      animateNumber(startScore, targetScore, 650, (value) => {
+        overlayMeterScore.textContent = String(value);
+        overlayMeterTier.textContent = getMeterTierText(value);
+        overlayMeterProgress.style.strokeDashoffset = String(100 - clamp(value, 0, 100));
+      });
 
-    animateNumber(startStreak, targetStreak, 650, (value) => {
-      overlayStats.textContent = `Failometer: ${targetScore}/100 · Loss Streak: ${value}`;
-    }, () => {
-      overlayStats.textContent = `Failometer: ${targetScore}/100 · Loss Streak: ${targetStreak}`;
-    });
+      animateNumber(startStreak, targetStreak, 650, (value) => {
+        overlayStreakValue.textContent = String(value);
+      }, () => {
+        overlayStreakValue.textContent = String(targetStreak);
+      });
 
-    lastOverlayScore = targetScore;
-    lastOverlayStreak = targetStreak;
+      lastOverlayScore = targetScore;
+      lastOverlayStreak = targetStreak;
+    };
+
+    if (!delayAnimation) {
+      runAnimation();
+      return;
+    }
+
+    overlayStatsTimer = setTimeout(() => {
+      overlayStatsTimer = null;
+      runAnimation();
+    }, 200);
   }
 
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -804,7 +828,7 @@ paddle.y = paddle.baseY;
       restoreState = null;
     }
 
-    renderOverlayStats(options.stats || null);
+    renderOverlayStats(options.stats || null, { delayAnimation: options.delayStatsAnimation !== false });
     renderOverlayFeatures(options.features || []);
     overlay.classList.remove("is-hidden");
 
@@ -814,6 +838,10 @@ paddle.y = paddle.baseY;
   }
 
   function hideOverlay() {
+    if (overlayStatsTimer) {
+      clearTimeout(overlayStatsTimer);
+      overlayStatsTimer = null;
+    }
     if (state.startTimeMs !== null && state.overlayShownAtMs !== null) {
       state.pausedDurationMs += Math.max(0, performance.now() - state.overlayShownAtMs);
       state.overlayShownAtMs = null;

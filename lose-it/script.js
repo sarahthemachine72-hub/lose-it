@@ -44,6 +44,7 @@ const displayedHubValues = {
 let currentMode = "win";
 let selectedGame = "";
 let selectedGamePath = "";
+let hubAnimationTimer = null;
 
 function readMetrics() {
   try {
@@ -105,7 +106,7 @@ function initializeFromQuery() {
     }
   }
 
-  updateHub(currentMode, { animate: true });
+  updateHub(currentMode, { animate: false });
 
   if (targetScreen !== "difficulty") {
     return;
@@ -163,7 +164,6 @@ modeButtons.forEach((button) => {
   button.addEventListener("click", () => {
     currentMode = button.dataset.mode;
     localStorage.setItem(MODE_STORAGE_KEY, currentMode);
-    updateHub(currentMode, { animate: true });
     showScreen("hub");
   });
 });
@@ -197,6 +197,11 @@ difficultyBackBtn.addEventListener("click", () => {
 });
 
 function showScreen(screenName) {
+  if (hubAnimationTimer) {
+    clearTimeout(hubAnimationTimer);
+    hubAnimationTimer = null;
+  }
+
   homeScreen.classList.remove("active");
   hubScreen.classList.remove("active");
   difficultyScreen.classList.remove("active");
@@ -205,6 +210,10 @@ function showScreen(screenName) {
     homeScreen.classList.add("active");
   } else if (screenName === "hub") {
     hubScreen.classList.add("active");
+    hubAnimationTimer = setTimeout(() => {
+      updateHub(currentMode, { animate: true });
+      hubAnimationTimer = null;
+    }, 200);
   } else if (screenName === "difficulty") {
     difficultyScreen.classList.add("active");
   }
