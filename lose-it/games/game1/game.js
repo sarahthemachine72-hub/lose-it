@@ -695,8 +695,7 @@ paddle.y = paddle.baseY;
           `you have passed level ${state.level}/4, only ${levelsRemaining} to go...`,
           {
             buttonLabel: "Proceed to Next Level",
-            showExit: true,
-            exitLabel: "Exit"
+            showExit: false
           }
         );
         return;
@@ -735,6 +734,11 @@ paddle.y = paddle.baseY;
       exitLabel: "Exit",
       stats
     });
+  }
+
+
+  function shouldResetTimerOnNextLevel() {
+    return !(difficulty === "marathon" && hasExplicitDifficulty);
   }
 
   function goToNextLevelAfterLoss() {
@@ -785,9 +789,9 @@ paddle.y = paddle.baseY;
     pausedOnOverlay = true;
     const subtitle = fromTesting
       ? "Testing mode: skipped to level 2. Tap / Click to start."
-      : "You only reach this level by losing level 1. Tap / Click to start.";
+      : "making progress";
     levelBriefingPending = true;
-    showOverlay("Level 2 Unlocked", subtitle);
+    showOverlay("Level 2", subtitle);
   }
 
 
@@ -817,9 +821,9 @@ paddle.y = paddle.baseY;
     pausedOnOverlay = true;
     const subtitle = fromTesting
       ? "Testing mode: skipped to level 3. Tap / Click to start."
-      : "You only reach this level by losing level 2. Tap / Click to start.";
+      : "you've come so far";
     levelBriefingPending = true;
-    showOverlay("Level 3 Unlocked", subtitle);
+    showOverlay("Level 3", subtitle);
   }
 
   function beginLevel4(fromTesting = false) {
@@ -848,9 +852,9 @@ paddle.y = paddle.baseY;
     pausedOnOverlay = true;
     const subtitle = fromTesting
       ? "Testing mode: skipped to level 4. Tap / Click to start."
-      : "You only reach this level by losing level 3. Tap / Click to start.";
+      : "it all ends now";
     levelBriefingPending = true;
-    showOverlay("Level 4 Unlocked", subtitle);
+    showOverlay("Level 4", subtitle);
   }
 
   function renderOverlayFeatures(items = []) {
@@ -1185,11 +1189,13 @@ function movePaddle(clientX) {
   startBtn.addEventListener("click", () => {
     if (awaitingLossChoice) {
       awaitingLossChoice = false;
-      state.elapsedMs = 0;
-      state.startTimeMs = null;
-      state.pausedDurationMs = 0;
-      state.overlayShownAtMs = null;
-      timerEl.textContent = "00:00";
+      if (shouldResetTimerOnNextLevel()) {
+        state.elapsedMs = 0;
+        state.startTimeMs = null;
+        state.pausedDurationMs = 0;
+        state.overlayShownAtMs = null;
+        timerEl.textContent = "00:00";
+      }
       goToNextLevelAfterLoss();
       return;
     }
