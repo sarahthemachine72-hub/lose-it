@@ -4,7 +4,6 @@
 
   const livesEl = document.getElementById("lives");
   const timerEl = document.getElementById("timer");
-  const restartBtn = document.getElementById("restartBtn");
   const hudExitBtn = document.getElementById("hudExitBtn");
 
   const overlay = document.getElementById("overlay");
@@ -293,6 +292,7 @@
 
   let levelBriefingPending = false;
   let awaitingLossChoice = false;
+  let awaitingExitWinChoice = false;
   let targetCenterX = 0; // where the cursor/finger wants the paddle center to be
   let powerToastText = "";
 let powerToastStart = 0;
@@ -704,7 +704,7 @@ paddle.y = paddle.baseY;
       awaitingLossChoice = false;
       state.lost = true;
       const stats = reportGameOutcome("loss");
-      showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}. Press R or Restart.`, {
+      showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}.`, {
         showStart: false,
         showExit: true,
         exitLabel: "Exit",
@@ -718,7 +718,7 @@ paddle.y = paddle.baseY;
     if (difficulty === "extreme") {
       awaitingLossChoice = false;
       state.lost = true;
-      showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}. Press R or Restart.`, {
+      showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}.`, {
         showStart: false,
         showExit: true,
         exitLabel: "Exit",
@@ -734,6 +734,30 @@ paddle.y = paddle.baseY;
       exitLabel: "Exit",
       stats
     });
+  }
+
+
+
+  function navigateToDifficultyScreen() {
+    window.location.href = `../../index.html?screen=difficulty&game=Game%201&path=games/game1/index.html&mode=${encodeURIComponent(currentMode)}`;
+  }
+
+  function openExitWinChoiceOverlay() {
+    if (state.won || state.lost || awaitingLossChoice || awaitingExitWinChoice) return;
+
+    running = false;
+    pausedOnOverlay = true;
+    awaitingExitWinChoice = true;
+
+    showOverlay(
+      "Exit counts as a win",
+      "If you exit now, this level will be counted as a win.",
+      {
+        buttonLabel: "Win",
+        showExit: true,
+        exitLabel: "Continue playing"
+      }
+    );
   }
 
 
@@ -760,11 +784,12 @@ paddle.y = paddle.baseY;
     state.lost = true;
     running = false;
     const stats = reportGameOutcome("loss");
-    showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}. Press R or Restart.`, { stats });
+    showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}.`, { stats });
   }
 
   function beginLevel2(fromTesting = false) {
     awaitingLossChoice = false;
+    awaitingExitWinChoice = false;
     state.level = 2;
     state.lives = 5;
     state.resurrectionsLeft = 3;
@@ -797,6 +822,7 @@ paddle.y = paddle.baseY;
 
   function beginLevel3(fromTesting = false) {
     awaitingLossChoice = false;
+    awaitingExitWinChoice = false;
     state.level = 3;
     state.lives = 5;
     state.resurrectionsLeft = 3;
@@ -828,6 +854,7 @@ paddle.y = paddle.baseY;
 
   function beginLevel4(fromTesting = false) {
     awaitingLossChoice = false;
+    awaitingExitWinChoice = false;
     state.level = 4;
     state.lives = 5;
     state.resurrectionsLeft = 3;
@@ -932,7 +959,7 @@ paddle.y = paddle.baseY;
   }
 
   function handleGameStart() {
-    if (state.won || state.lost || awaitingLossChoice) return;
+    if (state.won || state.lost || awaitingLossChoice || awaitingExitWinChoice) return;
 
     if (levelBriefingPending && [2, 3, 4].includes(state.level)) {
       levelBriefingPending = false;
@@ -984,6 +1011,7 @@ paddle.y = paddle.baseY;
     pausedOnOverlay = true;
     levelBriefingPending = [2, 3, 4].includes(level);
     awaitingLossChoice = false;
+    awaitingExitWinChoice = false;
 
     showOverlay("Tap / Click to Start", `${modeLabel} mode · Level ${level}`);
   }
@@ -1062,6 +1090,7 @@ paddle.y = paddle.baseY ?? paddle.y;
     pausedOnOverlay = true;
     levelBriefingPending = false;
     awaitingLossChoice = false;
+    awaitingExitWinChoice = false;
     showOverlay("Tap / Click to Start", "Destroy all boxes to win.");
   }
 
@@ -1087,6 +1116,7 @@ paddle.y = paddle.baseY ?? paddle.y;
     missiles.length = 0;
     lastMissileShot = 0;
     awaitingLossChoice = false;
+    awaitingExitWinChoice = false;
     levelBriefingPending = false;
 
     pausedOnOverlay = false;
@@ -1108,7 +1138,7 @@ paddle.y = paddle.baseY ?? paddle.y;
   }
 
   function triggerInstantLoss() {
-    if (!running || pausedOnOverlay || state.won || state.lost || awaitingLossChoice) return;
+    if (!running || pausedOnOverlay || state.won || state.lost || awaitingLossChoice || awaitingExitWinChoice) return;
 
     state.lives = 0;
     livesEl.textContent = "0";
@@ -1131,7 +1161,7 @@ paddle.y = paddle.baseY ?? paddle.y;
   }
 
   function triggerInstantWin() {
-    if (!running || pausedOnOverlay || state.won || state.lost || awaitingLossChoice) return;
+    if (!running || pausedOnOverlay || state.won || state.lost || awaitingLossChoice || awaitingExitWinChoice) return;
 
     for (const brick of bricks.grid) {
       brick.alive = false;
@@ -1187,6 +1217,23 @@ function movePaddle(clientX) {
   });
 
   startBtn.addEventListener("click", () => {
+    if (awaitingExitWinChoice) {
+      awaitingExitWinChoice = false;
+      state.won = true;
+      running = false;
+      pausedOnOverlay = true;
+      const stats = reportGameOutcome("win");
+      showOverlay("You Win!", `Cleared level ${state.level} in ${formatElapsed(state.elapsedMs)}.`, {
+        buttonLabel: "Try again",
+        showExit: true,
+        exitLabel: "Exit",
+        showRestore: true,
+        restoreStats: { score: stats.previousScore, streak: stats.previousStreak },
+        stats
+      });
+      return;
+    }
+
     if (awaitingLossChoice) {
       awaitingLossChoice = false;
       if (shouldResetTimerOnNextLevel()) {
@@ -1201,7 +1248,7 @@ function movePaddle(clientX) {
     }
 
     if (state.won) {
-      restartCurrentLevel();
+      resetGame();
       return;
     }
 
@@ -1216,15 +1263,25 @@ function movePaddle(clientX) {
   exitBtn.addEventListener("click", () => {
     if (exitBtn.classList.contains("is-hidden")) return;
 
-    window.location.href = `../../index.html?screen=difficulty&game=Game%201&path=games/game1/index.html&mode=${encodeURIComponent(currentMode)}`;
-  });
+    if (awaitingExitWinChoice) {
+      awaitingExitWinChoice = false;
+      hideOverlay();
+      pausedOnOverlay = false;
+      running = true;
+      return;
+    }
 
-  restartBtn.addEventListener("click", () => {
-    resetGame();
+    if (state.won || state.lost || awaitingLossChoice) {
+      navigateToDifficultyScreen();
+      return;
+    }
+
+    openExitWinChoiceOverlay();
   });
 
   hudExitBtn.addEventListener("click", () => {
-    window.location.href = `../../index.html?screen=difficulty&game=Game%201&path=games/game1/index.html&mode=${encodeURIComponent(currentMode)}`;
+    if (state.won || state.lost || awaitingLossChoice || awaitingExitWinChoice) return;
+    openExitWinChoiceOverlay();
   });
 
     // --------------------
