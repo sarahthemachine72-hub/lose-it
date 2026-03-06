@@ -1060,6 +1060,14 @@ paddle.y = paddle.baseY ?? paddle.y;
     goToNextLevelAfterLoss();
   }
 
+  function triggerInstantWin() {
+    if (!running || pausedOnOverlay || state.won || state.lost || awaitingLossChoice) return;
+
+    for (const brick of bricks.grid) {
+      brick.alive = false;
+    }
+  }
+
   // --------------------
   // INPUT
   // --------------------
@@ -1098,6 +1106,7 @@ function movePaddle(clientX) {
   window.addEventListener("keydown", (e) => {
     if (e.key.toLowerCase() === "r") resetGame();
     if (e.key.toLowerCase() === "l") triggerInstantLoss();
+    if (e.key.toLowerCase() === "w") triggerInstantWin();
     if (e.key === "2") beginLevel2(true);
     if (e.key === "3") beginLevel3(true);
     if (e.key === "4") beginLevel4(true);
@@ -1133,7 +1142,7 @@ function movePaddle(clientX) {
   });
 
   exitBtn.addEventListener("click", () => {
-    if (!awaitingLossChoice && !state.won) return;
+    if (exitBtn.classList.contains("is-hidden")) return;
 
     window.location.href = `../../index.html?screen=difficulty&game=Game%201&path=games/game1/index.html&mode=${encodeURIComponent(currentMode)}`;
   });

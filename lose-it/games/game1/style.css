@@ -117,6 +117,7 @@ body {
   width: 100%;
   max-width: 180px;
   margin: 0 auto;
+  padding-bottom: 18px;
 }
 
 .overlayMeter__svg {
@@ -163,12 +164,18 @@ body {
 }
 
 .overlayMeter__tier {
-  margin-top: 4px;
+  position: absolute;
+  top: calc(100% - 10px);
+  left: 50%;
+  transform: translateX(-50%);
   font-size: 0.65rem;
+  line-height: 1.2;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   color: rgba(255, 230, 236, 0.92);
   max-width: 160px;
+  width: 160px;
+  text-align: center;
 }
 
 
