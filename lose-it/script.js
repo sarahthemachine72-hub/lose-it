@@ -275,6 +275,13 @@ function showScreen(screenName) {
     homeScreen.classList.add("active");
   } else if (screenName === "hub") {
     hubScreen.classList.add("active");
+    if (currentMode === "lose" && pendingLoseHubSnapshot) {
+      updateHub(currentMode, {
+        animate: false,
+        displayValues: pendingLoseHubSnapshot
+      });
+    }
+
     hubAnimationTimer = setTimeout(() => {
       const snapshotStart = currentMode === "lose" ? pendingLoseHubSnapshot : null;
       if (currentMode === "lose") {
@@ -305,10 +312,19 @@ function showScreen(screenName) {
 }
 
 function updateHub(mode, options = {}) {
-  const { animate = true, preserveDisplayedValues = false, startFrom = null } = options;
+  const {
+    animate = true,
+    preserveDisplayedValues = false,
+    startFrom = null,
+    displayValues = null
+  } = options;
   const data = appData[mode];
-  const targetScore = clamp(data.score, 0, 100);
-  const targetStreak = Math.max(0, Math.floor(data.streak));
+  const targetScore = Number.isFinite(displayValues?.score)
+    ? clamp(displayValues.score, 0, 100)
+    : clamp(data.score, 0, 100);
+  const targetStreak = Number.isFinite(displayValues?.streak)
+    ? Math.max(0, Math.floor(displayValues.streak))
+    : Math.max(0, Math.floor(data.streak));
 
   if (mode === "win") {
     modeTitle.textContent = "WIN MODE";
