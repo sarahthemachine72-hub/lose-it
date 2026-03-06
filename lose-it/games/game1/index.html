@@ -29,6 +29,25 @@
           <div class="cardTitle" id="overlayTitle">Tap / Click to Start</div>
           <div class="cardSub" id="overlaySubtitle">Destroy all boxes to win.</div>
           <div class="overlayStats" id="overlayStats"></div>
+          <div class="overlayMeter" id="overlayMeter" aria-hidden="true">
+            <div class="overlayMeter__label">FAILOMETER</div>
+            <div class="overlayMeter__wrap">
+              <svg class="overlayMeter__svg" viewBox="0 0 220 130" aria-hidden="true">
+                <path
+                  class="overlayMeter__bg"
+                  d="M 30 110 A 80 80 0 0 1 190 110"
+                  pathLength="100"
+                />
+                <path
+                  id="overlayMeterProgress"
+                  class="overlayMeter__progress"
+                  d="M 30 110 A 80 80 0 0 1 190 110"
+                  pathLength="100"
+                />
+              </svg>
+              <div class="overlayMeter__value"><span id="overlayMeterScore">0</span><small>/100</small></div>
+            </div>
+          </div>
           <div class="cardFeatures" id="overlayFeatures"></div>
           <div class="cardActions">
             <button class="btn" id="startBtn">Start</button>

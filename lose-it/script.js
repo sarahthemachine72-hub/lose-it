@@ -18,6 +18,7 @@ const gameTiles = document.querySelectorAll(".game-tile");
 const difficultyButtons = document.querySelectorAll(".difficulty-btn");
 
 const METRICS_STORAGE_KEY = "loseItMetricsV1";
+const MODE_STORAGE_KEY = "loseItModeV1";
 const defaultMetrics = {
   failometerScore: 0,
   lossStreak: 0
@@ -86,7 +87,20 @@ function applyLoseModeResult(result = {}) {
 
 function initializeFromQuery() {
   const params = new URLSearchParams(window.location.search);
+  const requestedMode = params.get("mode");
   const targetScreen = params.get("screen");
+
+  if (requestedMode === "win" || requestedMode === "lose") {
+    currentMode = requestedMode;
+    localStorage.setItem(MODE_STORAGE_KEY, currentMode);
+  } else {
+    const storedMode = localStorage.getItem(MODE_STORAGE_KEY);
+    if (storedMode === "win" || storedMode === "lose") {
+      currentMode = storedMode;
+    }
+  }
+
+  updateHub(currentMode);
 
   if (targetScreen !== "difficulty") {
     return;
@@ -101,6 +115,7 @@ function initializeFromQuery() {
 modeButtons.forEach((button) => {
   button.addEventListener("click", () => {
     currentMode = button.dataset.mode;
+    localStorage.setItem(MODE_STORAGE_KEY, currentMode);
     updateHub(currentMode);
     showScreen("hub");
   });
@@ -119,10 +134,10 @@ gameTiles.forEach((tile) => {
   difficultyButtons.forEach((button) => {
     button.addEventListener("click", () => {
       const difficulty = button.dataset.difficulty;
-  
+
       if (!selectedGamePath) return;
-  
-      window.location.href = `${selectedGamePath}?difficulty=${encodeURIComponent(difficulty)}`;
+
+      window.location.href = `${selectedGamePath}?difficulty=${encodeURIComponent(difficulty)}&mode=${encodeURIComponent(currentMode)}`;
     });
   });
 
