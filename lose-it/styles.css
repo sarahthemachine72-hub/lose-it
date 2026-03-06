@@ -162,7 +162,7 @@ body {
   width: 100%;
   max-width: 240px;
   margin: 0 auto;
-  padding-bottom: 24px;
+  padding-bottom: 36px;
 }
 
 .semi-meter {
@@ -191,7 +191,7 @@ body {
 .meter-value {
   position: absolute;
   left: 50%;
-  bottom: 10px;
+  bottom: 22px;
   transform: translateX(-50%);
   text-align: center;
 }
@@ -209,7 +209,7 @@ body {
 
 .meter-tier {
   position: absolute;
-  top: calc(100% - 14px);
+  bottom: 4px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 0.72rem;
