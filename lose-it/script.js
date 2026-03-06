@@ -123,6 +123,7 @@ function initializeFromQuery() {
   const params = new URLSearchParams(window.location.search);
   const requestedMode = params.get("mode");
   const targetScreen = params.get("screen");
+  const snapshot = readLoseHubSnapshot();
 
   if (requestedMode === "win" || requestedMode === "lose") {
     currentMode = requestedMode;
@@ -134,15 +135,19 @@ function initializeFromQuery() {
     }
   }
 
+  if (currentMode === "lose" && snapshot) {
+    displayedHubValues.lose = snapshot;
+  }
+
   if (targetScreen !== "difficulty") {
-    updateHub(currentMode, { animate: false });
+    updateHub(currentMode, {
+      animate: false,
+      preserveDisplayedValues: currentMode === "lose" && Boolean(snapshot)
+    });
     return;
   }
 
-  const snapshot = readLoseHubSnapshot();
-  if (currentMode === "lose" && snapshot) {
-    displayedHubValues.lose = snapshot;
-  } else {
+  if (!(currentMode === "lose" && snapshot)) {
     updateHub(currentMode, { animate: false });
   }
 
@@ -267,7 +272,7 @@ function showScreen(screenName) {
 }
 
 function updateHub(mode, options = {}) {
-  const { animate = true } = options;
+  const { animate = true, preserveDisplayedValues = false } = options;
   const data = appData[mode];
   const targetScore = clamp(data.score, 0, 100);
   const targetStreak = Math.max(0, Math.floor(data.streak));
@@ -292,7 +297,11 @@ function updateHub(mode, options = {}) {
     meterTier.textContent = getMeterTierText(mode, targetScore);
     streakCount.textContent = String(targetStreak);
     meterProgress.style.strokeDashoffset = String(100 - targetScore);
-    displayedHubValues[mode] = { score: targetScore, streak: targetStreak };
+
+    if (!preserveDisplayedValues) {
+      displayedHubValues[mode] = { score: targetScore, streak: targetStreak };
+    }
+
     return;
   }
 
