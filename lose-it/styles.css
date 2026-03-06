@@ -162,6 +162,7 @@ body {
   width: 100%;
   max-width: 240px;
   margin: 0 auto;
+  padding-bottom: 24px;
 }
 
 .semi-meter {
@@ -207,12 +208,18 @@ body {
 }
 
 .meter-tier {
-  margin-top: 4px;
+  position: absolute;
+  top: calc(100% - 14px);
+  left: 50%;
+  transform: translateX(-50%);
   font-size: 0.72rem;
+  line-height: 1.2;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.4px;
   max-width: 180px;
+  width: 180px;
+  text-align: center;
 }
 
 .streak-card {
