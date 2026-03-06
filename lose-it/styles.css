@@ -378,8 +378,9 @@ body {
   top: 50%;
   transform: translateY(-50%);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
 }
 
 .difficulty-lock {
