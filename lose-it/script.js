@@ -265,7 +265,7 @@ function updateDifficultyButtons() {
 function openUnlockOverlay(difficulty) {
   pendingUnlockDifficulty = difficulty;
   const label = GAME1_DIFFICULTY_LABELS[difficulty] || difficulty.toUpperCase();
-  unlockOverlayText.textContent = `Complete all previous levels to unlock ${label} or watch an ad to unlock for 24 hours`;
+  unlockOverlayText.textContent = `Lose all previous levels to unlock ${label} or watch an ad to unlock for 24 hours`;
   unlockOverlay.classList.add("active");
   unlockOverlay.setAttribute("aria-hidden", "false");
 }
