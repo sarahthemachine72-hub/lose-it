@@ -48,30 +48,44 @@ let selectedGamePath = "";
 let hubAnimationTimer = null;
 let pendingLoseHubSnapshot = null;
 
+function logFailometer(stage, details = {}) {
+  console.log(`[Failometer] ${stage}`, details);
+}
+
 function readLoseHubSnapshot() {
   try {
     const raw = localStorage.getItem(LOSE_HUB_SNAPSHOT_KEY);
-    if (!raw) return null;
-
-    const parsed = JSON.parse(raw);
-    if (!Number.isFinite(parsed.score) || !Number.isFinite(parsed.streak)) {
+    if (!raw) {
+      logFailometer("snapshot:read:empty");
       return null;
     }
 
-    return {
+    const parsed = JSON.parse(raw);
+    if (!Number.isFinite(parsed.score) || !Number.isFinite(parsed.streak)) {
+      logFailometer("snapshot:read:invalid", { parsed });
+      return null;
+    }
+
+    const snapshot = {
       score: clamp(parsed.score, 0, 100),
       streak: Math.max(0, Math.floor(parsed.streak))
     };
+
+    logFailometer("snapshot:read:success", snapshot);
+    return snapshot;
   } catch (error) {
+    logFailometer("snapshot:read:error", { error });
     return null;
   }
 }
 
 function writeLoseHubSnapshot(snapshot) {
+  logFailometer("snapshot:write", snapshot);
   localStorage.setItem(LOSE_HUB_SNAPSHOT_KEY, JSON.stringify(snapshot));
 }
 
 function clearLoseHubSnapshot() {
+  logFailometer("snapshot:clear");
   localStorage.removeItem(LOSE_HUB_SNAPSHOT_KEY);
 }
 
@@ -139,6 +153,7 @@ function initializeFromQuery() {
   if (currentMode === "lose" && snapshot) {
     displayedHubValues.lose = snapshot;
     pendingLoseHubSnapshot = snapshot;
+    logFailometer("initialize:pending-snapshot-set", { pendingLoseHubSnapshot });
   }
 
   if (targetScreen !== "difficulty") {
@@ -262,12 +277,22 @@ function showScreen(screenName) {
     hubScreen.classList.add("active");
     hubAnimationTimer = setTimeout(() => {
       const snapshotStart = currentMode === "lose" ? pendingLoseHubSnapshot : null;
+      if (currentMode === "lose") {
+        logFailometer("showScreen:hub:animate", {
+          pendingLoseHubSnapshot,
+          snapshotStart,
+          displayedLoseValues: displayedHubValues.lose,
+          targetLoseValues: appData.lose
+        });
+      }
+
       updateHub(currentMode, {
         animate: true,
         startFrom: snapshotStart
       });
 
       if (currentMode === "lose") {
+        logFailometer("showScreen:hub:pending-snapshot-cleared", { pendingLoseHubSnapshot });
         pendingLoseHubSnapshot = null;
         clearLoseHubSnapshot();
       }
@@ -303,6 +328,19 @@ function updateHub(mode, options = {}) {
     ? Math.max(0, Math.floor(startFrom.streak))
     : displayed.streak;
 
+  if (mode === "lose") {
+    logFailometer("updateHub:resolved-values", {
+      animate,
+      startFrom,
+      pendingLoseHubSnapshot,
+      displayedLoseValues: displayed,
+      targetScore,
+      targetStreak,
+      fromScore,
+      fromStreak
+    });
+  }
+
 
   if (!animate) {
     meterScore.textContent = String(targetScore);
@@ -314,21 +352,48 @@ function updateHub(mode, options = {}) {
       displayedHubValues[mode] = { score: targetScore, streak: targetStreak };
     }
 
+    if (mode === "lose") {
+      logFailometer("updateHub:no-animation", {
+        preserveDisplayedValues,
+        displayedLoseValues: displayedHubValues.lose,
+        targetScore,
+        targetStreak
+      });
+    }
+
     return;
   }
 
   animateNumber(fromScore, targetScore, 650, (value) => {
+    if (mode === "lose") {
+      logFailometer("animate:score:tick", { value, fromScore, targetScore });
+    }
     meterScore.textContent = String(value);
     meterTier.textContent = getMeterTierText(mode, value);
     meterProgress.style.strokeDashoffset = String(100 - clamp(value, 0, 100));
   }, () => {
     displayedHubValues[mode].score = targetScore;
+    if (mode === "lose") {
+      logFailometer("animate:score:done", {
+        finalScore: targetScore,
+        displayedLoseValues: displayedHubValues.lose
+      });
+    }
   });
 
   animateNumber(fromStreak, targetStreak, 650, (value) => {
+    if (mode === "lose") {
+      logFailometer("animate:streak:tick", { value, fromStreak, targetStreak });
+    }
     streakCount.textContent = String(value);
   }, () => {
     displayedHubValues[mode].streak = targetStreak;
+    if (mode === "lose") {
+      logFailometer("animate:streak:done", {
+        finalStreak: targetStreak,
+        displayedLoseValues: displayedHubValues.lose
+      });
+    }
   });
 }
 
