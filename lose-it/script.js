@@ -364,6 +364,11 @@ function updateHub(mode, options = {}) {
     return;
   }
 
+  meterScore.textContent = String(fromScore);
+  meterTier.textContent = getMeterTierText(mode, fromScore);
+  streakCount.textContent = String(fromStreak);
+  meterProgress.style.strokeDashoffset = String(100 - clamp(fromScore, 0, 100));
+
   animateNumber(fromScore, targetScore, 650, (value) => {
     if (mode === "lose") {
       logFailometer("animate:score:tick", { value, fromScore, targetScore });
