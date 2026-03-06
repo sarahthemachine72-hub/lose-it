@@ -10,6 +10,7 @@
   const overlay = document.getElementById("overlay");
   const overlayTitle = document.getElementById("overlayTitle");
   const overlaySubtitle = document.getElementById("overlaySubtitle");
+  const overlayStats = document.getElementById("overlayStats");
   const overlayFeatures = document.getElementById("overlayFeatures");
   const startBtn = document.getElementById("startBtn");
   const exitBtn = document.getElementById("exitBtn");
@@ -19,7 +20,61 @@
   const hasDifficulty = typeof receivedDifficulty === "string" && receivedDifficulty.trim() !== "";
   const difficulty = receivedDifficulty || "normal";
 
+  const METRICS_STORAGE_KEY = "loseItMetricsV1";
+  const failometerByDifficulty = {
+    easy: { loss: 4, win: -8 },
+    normal: { loss: 8, win: -6 },
+    hard: { loss: 12, win: -4 },
+    extreme: { loss: 16, win: -2 }
+  };
 
+  function readMetrics() {
+    try {
+      const raw = localStorage.getItem(METRICS_STORAGE_KEY);
+      if (!raw) return { failometerScore: 0, lossStreak: 0 };
+
+      const parsed = JSON.parse(raw);
+      return {
+        failometerScore: Number.isFinite(parsed.failometerScore) ? parsed.failometerScore : 0,
+        lossStreak: Number.isFinite(parsed.lossStreak) ? parsed.lossStreak : 0
+      };
+    } catch (error) {
+      return { failometerScore: 0, lossStreak: 0 };
+    }
+  }
+
+  function getScoreDelta(outcome) {
+    const weights = failometerByDifficulty[difficulty] || failometerByDifficulty.normal;
+    return outcome === "loss" ? weights.loss : weights.win;
+  }
+
+  function reportGameOutcome(outcome) {
+    const scoreDelta = getScoreDelta(outcome);
+    const metrics = readMetrics();
+    const nextScore = clamp(metrics.failometerScore + scoreDelta, 0, 100);
+    const nextStreak = outcome === "loss" ? metrics.lossStreak + 1 : 0;
+
+    localStorage.setItem(
+      METRICS_STORAGE_KEY,
+      JSON.stringify({
+        failometerScore: nextScore,
+        lossStreak: nextStreak
+      })
+    );
+
+    return { score: nextScore, streak: nextStreak, scoreDelta };
+  }
+
+  function renderOverlayStats(stats) {
+    if (!stats) {
+      overlayStats.textContent = "";
+      overlayStats.classList.remove("is-visible");
+      return;
+    }
+
+    overlayStats.textContent = `Failometer: ${stats.score}/100 · Loss Streak: ${stats.streak}`;
+    overlayStats.classList.add("is-visible");
+  }
 
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
@@ -462,10 +517,12 @@ paddle.y = paddle.baseY;
     awaitingLossChoice = true;
     running = false;
     pausedOnOverlay = true;
+    const stats = reportGameOutcome("loss");
     showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}.`, {
       buttonLabel: "Proceed to Next Level",
       showExit: true,
-      exitLabel: "Exit"
+      exitLabel: "Exit",
+      stats
     });
   }
 
@@ -487,7 +544,8 @@ paddle.y = paddle.baseY;
 
     state.lost = true;
     running = false;
-    showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}. Press R or Restart.`);
+    const stats = reportGameOutcome("loss");
+    showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}. Press R or Restart.`, { stats });
   }
 
   function beginLevel2(fromTesting = false) {
@@ -624,6 +682,7 @@ paddle.y = paddle.baseY;
     startBtn.textContent = options.buttonLabel || "Start";
     exitBtn.textContent = options.exitLabel || "Exit";
     exitBtn.classList.toggle("is-hidden", !options.showExit);
+    renderOverlayStats(options.stats || null);
     renderOverlayFeatures(options.features || []);
     overlay.classList.remove("is-hidden");
 
@@ -1885,10 +1944,12 @@ paddle.assistDisplayDirection = 0;
       state.won = true;
       running = false;
       pausedOnOverlay = true;
+      const stats = reportGameOutcome("win");
       showOverlay("You Win!", `Cleared level ${state.level} in ${formatElapsed(state.elapsedMs)}.`, {
         buttonLabel: "Try again",
         showExit: true,
-        exitLabel: "Exit"
+        exitLabel: "Exit",
+        stats
       });
       clearAllPowers();
       paddle.playerMaxStep = Infinity;
