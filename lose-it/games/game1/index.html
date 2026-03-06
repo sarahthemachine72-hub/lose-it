@@ -48,15 +48,17 @@
               <div class="overlayMeter__value"><span id="overlayMeterScore">0</span><small>/100</small><div class="overlayMeter__tier" id="overlayMeterTier">not a loser</div></div>
             </div>
             </div>
-            <div class="overlayStreakCard" id="overlayStreakCard">
-              <div class="overlayStreakCard__label">STREAK</div>
-              <div class="overlayStreakCard__value" id="overlayStreakValue">0</div>
+            <div class="overlayStreakStack">
+              <div class="overlayStreakCard" id="overlayStreakCard">
+                <div class="overlayStreakCard__label">STREAK</div>
+                <div class="overlayStreakCard__value" id="overlayStreakValue">0</div>
+              </div>
+              <button class="btn btn--ghost btn--small is-hidden" id="restoreBtn" type="button">Restore Previous</button>
             </div>
           </div>
           <div class="cardFeatures" id="overlayFeatures"></div>
           <div class="cardActions">
             <button class="btn" id="startBtn">Start</button>
-            <button class="btn btn--ghost is-hidden" id="restoreBtn" type="button">Restore Previous</button>
             <button class="btn btn--ghost is-hidden" id="exitBtn" type="button">Exit</button>
           </div>
         </div>
