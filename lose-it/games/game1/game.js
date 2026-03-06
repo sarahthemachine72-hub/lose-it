@@ -649,10 +649,23 @@ paddle.y = paddle.baseY;
   }
 
   function openDifficultyLevelChoiceOverlay() {
-    awaitingLossChoice = true;
     running = false;
     pausedOnOverlay = true;
     const stats = reportGameOutcome("loss");
+
+    if (difficulty === "extreme") {
+      awaitingLossChoice = false;
+      state.lost = true;
+      showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}. Press R or Restart.`, {
+        showStart: false,
+        showExit: true,
+        exitLabel: "Exit",
+        stats
+      });
+      return;
+    }
+
+    awaitingLossChoice = true;
     showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}.`, {
       buttonLabel: "Proceed to Next Level",
       showExit: true,
@@ -815,6 +828,7 @@ paddle.y = paddle.baseY;
     overlayTitle.textContent = title;
     overlaySubtitle.textContent = subtitle;
     startBtn.textContent = options.buttonLabel || "Start";
+    startBtn.classList.toggle("is-hidden", options.showStart === false);
     exitBtn.textContent = options.exitLabel || "Exit";
     exitBtn.classList.toggle("is-hidden", !options.showExit);
     restoreBtn.classList.toggle("is-hidden", !options.showRestore);
