@@ -28,8 +28,8 @@
         <div class="card">
           <div class="cardTitle" id="overlayTitle">Tap / Click to Start</div>
           <div class="cardSub" id="overlaySubtitle">Destroy all boxes to win.</div>
-          <div class="overlayStats" id="overlayStats"></div>
-          <div class="overlayMeter" id="overlayMeter" aria-hidden="true">
+          <div class="overlayMeterPanel" id="overlayMeterPanel">
+            <div class="overlayMeter" id="overlayMeter" aria-hidden="true">
             <div class="overlayMeter__label">FAILOMETER</div>
             <div class="overlayMeter__wrap">
               <svg class="overlayMeter__svg" viewBox="0 0 220 130" aria-hidden="true">
@@ -46,6 +46,11 @@
                 />
               </svg>
               <div class="overlayMeter__value"><span id="overlayMeterScore">0</span><small>/100</small><div class="overlayMeter__tier" id="overlayMeterTier">not a loser</div></div>
+            </div>
+            </div>
+            <div class="overlayStreakCard" id="overlayStreakCard">
+              <div class="overlayStreakCard__label">STREAK</div>
+              <div class="overlayStreakCard__value" id="overlayStreakValue">0</div>
             </div>
           </div>
           <div class="cardFeatures" id="overlayFeatures"></div>
