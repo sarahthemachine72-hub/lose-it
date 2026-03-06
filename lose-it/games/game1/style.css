@@ -146,7 +146,7 @@ body {
 .overlayMeter__value {
   position: absolute;
   left: 50%;
-  bottom: 8px;
+  bottom: 35px;
   transform: translateX(-50%);
   text-align: center;
   color: #ffe7ec;
@@ -165,7 +165,7 @@ body {
 
 .overlayMeter__tier {
   position: absolute;
-  top: calc(100% - 10px);
+  bottom: 0px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 0.65rem;
@@ -173,8 +173,8 @@ body {
   letter-spacing: 0.5px;
   text-transform: uppercase;
   color: rgba(255, 230, 236, 0.92);
-  max-width: 160px;
-  width: 160px;
+  max-width: 120px;
+  width: 120px;
   text-align: center;
 }
 

@@ -191,7 +191,7 @@ body {
 .meter-value {
   position: absolute;
   left: 50%;
-  bottom: 22px;
+  bottom: 50px;
   transform: translateX(-50%);
   text-align: center;
 }
