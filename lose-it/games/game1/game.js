@@ -462,8 +462,8 @@ paddle.y = paddle.baseY;
     awaitingLossChoice = true;
     running = false;
     pausedOnOverlay = true;
-    showOverlay("Out of lives", "Proceed to the next level or exit?", {
-      buttonLabel: "Next Level",
+    showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}.`, {
+      buttonLabel: "Proceed to Next Level",
       showExit: true,
       exitLabel: "Exit"
     });
@@ -833,10 +833,7 @@ function movePaddle(clientX) {
   exitBtn.addEventListener("click", () => {
     if (!awaitingLossChoice) return;
 
-    awaitingLossChoice = false;
-    state.lost = true;
-    running = false;
-    showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}. Press R or Restart.`);
+    window.location.href = "../../index.html?screen=difficulty&game=Game%201&path=games/game1/index.html";
   });
 
   restartBtn.addEventListener("click", () => {
