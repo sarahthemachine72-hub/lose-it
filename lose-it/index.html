@@ -111,13 +111,47 @@
       <h3 class="difficulty-subtitle">Choose difficulty</h3>
 
       <div class="difficulty-buttons">
-        <button class="difficulty-btn" data-difficulty="easy">EASY</button>
-        <button class="difficulty-btn" data-difficulty="normal">NORMAL</button>
-        <button class="difficulty-btn" data-difficulty="hard">HARD</button>
-        <button class="difficulty-btn" data-difficulty="extreme">EXTREME</button>
+        <button class="difficulty-btn" data-difficulty="easy">
+          <span class="difficulty-label">EASY</span>
+          <span class="difficulty-tick" aria-hidden="true">✓</span>
+        </button>
+        <button class="difficulty-btn" data-difficulty="normal">
+          <span class="difficulty-label">NORMAL</span>
+          <span class="difficulty-tick" aria-hidden="true">✓</span>
+          <span class="difficulty-lock" aria-hidden="true">🔒</span>
+          <span class="difficulty-unlock-text">unlock</span>
+        </button>
+        <button class="difficulty-btn" data-difficulty="hard">
+          <span class="difficulty-label">HARD</span>
+          <span class="difficulty-tick" aria-hidden="true">✓</span>
+          <span class="difficulty-lock" aria-hidden="true">🔒</span>
+          <span class="difficulty-unlock-text">unlock</span>
+        </button>
+        <button class="difficulty-btn" data-difficulty="extreme">
+          <span class="difficulty-label">EXTREME</span>
+          <span class="difficulty-tick" aria-hidden="true">✓</span>
+          <span class="difficulty-lock" aria-hidden="true">🔒</span>
+          <span class="difficulty-unlock-text">unlock</span>
+        </button>
+        <button class="difficulty-btn" data-difficulty="marathon" data-game-only="game 1">
+          <span class="difficulty-label">MARATHON</span>
+          <span class="difficulty-tick" aria-hidden="true">✓</span>
+          <span class="difficulty-lock" aria-hidden="true">🔒</span>
+          <span class="difficulty-unlock-text">unlock</span>
+        </button>
       </div>
     </div>
   </section>
+
+  <div id="unlock-overlay" class="unlock-overlay" aria-hidden="true">
+    <div class="unlock-card">
+      <p id="unlock-overlay-text">Complete all previous levels to unlock NORMAL or watch an ad to unlock for 24 hours</p>
+      <div class="unlock-actions">
+        <button id="watch-ad-btn" class="difficulty-btn unlock-action-btn" type="button">watch ad</button>
+        <button id="no-thanks-btn" class="difficulty-btn unlock-action-btn" type="button">no thanks</button>
+      </div>
+    </div>
+  </div>
   </div>
 
   <script src="script.js"></script>

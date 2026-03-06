@@ -13,6 +13,10 @@ const streakCount = document.getElementById("streak-count");
 const meterProgress = document.getElementById("meter-progress");
 
 const difficultyTitle = document.getElementById("difficulty-title");
+const unlockOverlay = document.getElementById("unlock-overlay");
+const unlockOverlayText = document.getElementById("unlock-overlay-text");
+const watchAdBtn = document.getElementById("watch-ad-btn");
+const noThanksBtn = document.getElementById("no-thanks-btn");
 
 const modeButtons = document.querySelectorAll(".main-btn");
 const gameTiles = document.querySelectorAll(".game-tile");
@@ -21,6 +25,17 @@ const difficultyButtons = document.querySelectorAll(".difficulty-btn");
 const METRICS_STORAGE_KEY = "loseItMetricsV1";
 const MODE_STORAGE_KEY = "loseItModeV1";
 const LOSE_HUB_SNAPSHOT_KEY = "loseItLoseHubSnapshotV1";
+const DIFFICULTY_PROGRESS_KEY = "loseItDifficultyProgressV1";
+const TEMP_UNLOCK_KEY = "loseItTempDifficultyUnlockV1";
+const SELECTED_DIFFICULTY_KEY = "loseItSelectedDifficultyV1";
+const GAME1_DIFFICULTIES = ["easy", "normal", "hard", "extreme", "marathon"];
+const GAME1_DIFFICULTY_LABELS = {
+  easy: "EASY",
+  normal: "NORMAL",
+  hard: "HARD",
+  extreme: "EXTREME",
+  marathon: "MARATHON"
+};
 const defaultMetrics = {
   failometerScore: 0,
   lossStreak: 0
@@ -47,6 +62,7 @@ let selectedGame = "";
 let selectedGamePath = "";
 let hubAnimationTimer = null;
 let pendingLoseHubSnapshot = null;
+let pendingUnlockDifficulty = "";
 
 function logFailometer() {}
 
@@ -132,11 +148,145 @@ function applyLoseModeResult(result = {}) {
   appData.lose.streak = metrics.lossStreak;
 }
 
+
+
+function readDifficultyProgress() {
+  try {
+    const raw = localStorage.getItem(DIFFICULTY_PROGRESS_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return typeof parsed === "object" && parsed ? parsed : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function writeDifficultyProgress(progress) {
+  localStorage.setItem(DIFFICULTY_PROGRESS_KEY, JSON.stringify(progress));
+}
+
+function markDifficultyCompleted(game, difficulty) {
+  if (!game || !difficulty) return;
+  const progress = readDifficultyProgress();
+  const gameKey = game.toLowerCase();
+  const completed = Array.isArray(progress[gameKey]) ? progress[gameKey] : [];
+
+  if (!completed.includes(difficulty)) {
+    progress[gameKey] = [...completed, difficulty];
+    writeDifficultyProgress(progress);
+  }
+}
+
+function readTemporaryUnlocks() {
+  try {
+    const raw = localStorage.getItem(TEMP_UNLOCK_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return typeof parsed === "object" && parsed ? parsed : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function writeTemporaryUnlocks(unlocks) {
+  localStorage.setItem(TEMP_UNLOCK_KEY, JSON.stringify(unlocks));
+}
+
+function getUnlockRequirement(difficulty) {
+  const index = GAME1_DIFFICULTIES.indexOf(difficulty);
+  if (index <= 0) return null;
+  return GAME1_DIFFICULTIES[index - 1];
+}
+
+
+function isDifficultyCompleted(game, difficulty) {
+  const progress = readDifficultyProgress();
+  const completed = Array.isArray(progress[game.toLowerCase()]) ? progress[game.toLowerCase()] : [];
+  return completed.includes(difficulty);
+}
+
+function isDifficultyPermanentlyUnlocked(game, difficulty) {
+  if (!difficulty) return false;
+  if (difficulty === "easy") return true;
+
+  const requirement = getUnlockRequirement(difficulty);
+  if (!requirement) return true;
+
+  const progress = readDifficultyProgress();
+  const completed = Array.isArray(progress[game.toLowerCase()]) ? progress[game.toLowerCase()] : [];
+  return completed.includes(requirement);
+}
+
+function isDifficultyTemporarilyUnlocked(game, difficulty) {
+  const unlocks = readTemporaryUnlocks();
+  const key = `${game.toLowerCase()}:${difficulty}`;
+  const expiresAt = Number(unlocks[key]);
+
+  if (!Number.isFinite(expiresAt)) return false;
+  if (expiresAt <= Date.now()) {
+    delete unlocks[key];
+    writeTemporaryUnlocks(unlocks);
+    return false;
+  }
+
+  return true;
+}
+
+function isDifficultyUnlocked(game, difficulty) {
+  return isDifficultyPermanentlyUnlocked(game, difficulty) || isDifficultyTemporarilyUnlocked(game, difficulty);
+}
+
+function updateDifficultyButtons() {
+  difficultyButtons.forEach((button) => {
+    const difficulty = button.dataset.difficulty;
+    if (!difficulty) return;
+
+    const gameOnly = (button.dataset.gameOnly || "").toLowerCase();
+    const gameName = selectedGame.toLowerCase();
+    const isForCurrentGame = !gameOnly || gameOnly === gameName;
+
+    button.classList.remove("is-hidden");
+    if (!isForCurrentGame) {
+      button.classList.add("is-hidden");
+      return;
+    }
+
+    const unlocked = isDifficultyUnlocked(selectedGame, difficulty);
+    const completed = isDifficultyCompleted(selectedGame, difficulty);
+
+    button.classList.toggle("is-locked", !unlocked);
+    button.classList.toggle("is-unlocked", unlocked);
+
+    const shouldShowTick = completed;
+    button.classList.toggle("is-complete", shouldShowTick);
+  });
+}
+
+function openUnlockOverlay(difficulty) {
+  pendingUnlockDifficulty = difficulty;
+  const label = GAME1_DIFFICULTY_LABELS[difficulty] || difficulty.toUpperCase();
+  unlockOverlayText.textContent = `Complete all previous levels to unlock ${label} or watch an ad to unlock for 24 hours`;
+  unlockOverlay.classList.add("active");
+  unlockOverlay.setAttribute("aria-hidden", "false");
+}
+
+function closeUnlockOverlay() {
+  pendingUnlockDifficulty = "";
+  unlockOverlay.classList.remove("active");
+  unlockOverlay.setAttribute("aria-hidden", "true");
+}
+
 function initializeFromQuery() {
   const params = new URLSearchParams(window.location.search);
   const requestedMode = params.get("mode");
   const targetScreen = params.get("screen");
+  const completedDifficulty = params.get("completedDifficulty");
+  const completedGame = params.get("completedGame") || "Game 1";
   const snapshot = readLoseHubSnapshot();
+
+  if (completedDifficulty) {
+    markDifficultyCompleted(completedGame, completedDifficulty);
+  }
 
   if (requestedMode === "win" || requestedMode === "lose") {
     currentMode = requestedMode;
@@ -245,7 +395,18 @@ difficultyButtons.forEach((button) => {
   button.addEventListener("click", () => {
     const difficulty = button.dataset.difficulty;
 
-    if (!selectedGamePath) return;
+    if (!selectedGamePath || !difficulty) return;
+
+    if (!isDifficultyUnlocked(selectedGame, difficulty)) {
+      openUnlockOverlay(difficulty);
+      return;
+    }
+
+    localStorage.setItem(SELECTED_DIFFICULTY_KEY, difficulty);
+    if (selectedGame.toLowerCase() === "game 1" && difficulty === "marathon") {
+      window.location.href = `${selectedGamePath}?mode=${encodeURIComponent(currentMode)}`;
+      return;
+    }
 
     window.location.href = `${selectedGamePath}?difficulty=${encodeURIComponent(difficulty)}&mode=${encodeURIComponent(currentMode)}`;
   });
@@ -256,7 +417,30 @@ backBtn.addEventListener("click", () => {
 });
 
 difficultyBackBtn.addEventListener("click", () => {
+  closeUnlockOverlay();
   showScreen("hub");
+});
+
+watchAdBtn.addEventListener("click", () => {
+  if (!pendingUnlockDifficulty) return;
+
+  const unlocks = readTemporaryUnlocks();
+  const key = `${selectedGame.toLowerCase()}:${pendingUnlockDifficulty}`;
+  unlocks[key] = Date.now() + 24 * 60 * 60 * 1000;
+  writeTemporaryUnlocks(unlocks);
+
+  closeUnlockOverlay();
+  updateDifficultyButtons();
+});
+
+noThanksBtn.addEventListener("click", () => {
+  closeUnlockOverlay();
+});
+
+unlockOverlay.addEventListener("click", (event) => {
+  if (event.target === unlockOverlay) {
+    closeUnlockOverlay();
+  }
 });
 
 function showScreen(screenName) {
@@ -306,6 +490,8 @@ function showScreen(screenName) {
     }, 200);
   } else if (screenName === "difficulty") {
     difficultyScreen.classList.add("active");
+    closeUnlockOverlay();
+    updateDifficultyButtons();
   }
 }
 

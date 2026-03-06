@@ -348,3 +348,98 @@ body {
   .difficulty-btn:active {
     transform: scale(0.98);
   }
+
+.difficulty-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.difficulty-label {
+  letter-spacing: 0.5px;
+}
+
+.difficulty-tick {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #2dd36f;
+  font-size: 1.1rem;
+  display: none;
+}
+
+.difficulty-lock {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid rgba(244, 244, 245, 0.6);
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.difficulty-unlock-text {
+  text-transform: lowercase;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.difficulty-btn.is-unlocked .difficulty-lock,
+.difficulty-btn.is-unlocked .difficulty-unlock-text {
+  display: none;
+}
+
+.difficulty-btn.is-complete .difficulty-tick {
+  display: block;
+}
+
+.difficulty-btn.is-hidden {
+  display: none;
+}
+
+.unlock-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.62);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 20;
+}
+
+.unlock-overlay.active {
+  display: flex;
+}
+
+.unlock-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 22px 18px;
+  text-align: center;
+}
+
+.unlock-card p {
+  font-size: 0.98rem;
+  line-height: 1.45;
+  margin-bottom: 18px;
+}
+
+.unlock-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.unlock-action-btn {
+  width: 100%;
+  text-transform: lowercase;
+}

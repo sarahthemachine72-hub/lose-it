@@ -24,10 +24,16 @@
   const params = new URLSearchParams(window.location.search);
   const receivedDifficulty = params.get("difficulty");
   const hasDifficulty = typeof receivedDifficulty === "string" && receivedDifficulty.trim() !== "";
-  const difficulty = receivedDifficulty || "normal";
 
   const METRICS_STORAGE_KEY = "loseItMetricsV1";
   const MODE_STORAGE_KEY = "loseItModeV1";
+  const DIFFICULTY_PROGRESS_KEY = "loseItDifficultyProgressV1";
+  const SELECTED_DIFFICULTY_KEY = "loseItSelectedDifficultyV1";
+
+  const selectedDifficulty = localStorage.getItem(SELECTED_DIFFICULTY_KEY);
+  const launchedMarathon = !hasDifficulty && selectedDifficulty === "marathon";
+  const difficulty = hasDifficulty ? receivedDifficulty : (launchedMarathon ? "marathon" : "normal");
+  const hasExplicitDifficulty = hasDifficulty || launchedMarathon;
 
   const requestedMode = params.get("mode");
   const storedMode = localStorage.getItem(MODE_STORAGE_KEY);
@@ -43,7 +49,8 @@
     easy: { loss: 4, win: -8 },
     normal: { loss: 8, win: -6 },
     hard: { loss: 12, win: -4 },
-    extreme: { loss: 16, win: -2 }
+    extreme: { loss: 16, win: -2 },
+    marathon: { loss: 20, win: -1 }
   };
 
   function readMetrics() {
@@ -90,6 +97,28 @@
       previousScore,
       previousStreak
     };
+  }
+
+  function markDifficultyCompletedIfNeeded() {
+    if (!hasExplicitDifficulty || !difficulty) return;
+
+    const progressRaw = localStorage.getItem(DIFFICULTY_PROGRESS_KEY);
+    let progress = {};
+
+    try {
+      const parsed = progressRaw ? JSON.parse(progressRaw) : {};
+      if (typeof parsed === "object" && parsed) {
+        progress = parsed;
+      }
+    } catch (error) {
+      progress = {};
+    }
+
+    const completed = Array.isArray(progress["game 1"]) ? progress["game 1"] : [];
+    if (!completed.includes(difficulty)) {
+      progress["game 1"] = [...completed, difficulty];
+      localStorage.setItem(DIFFICULTY_PROGRESS_KEY, JSON.stringify(progress));
+    }
   }
 
   function getMeterTierText(score) {
@@ -654,7 +683,7 @@ paddle.y = paddle.baseY;
     pausedOnOverlay = true;
     const stats = reportGameOutcome("loss");
 
-    if (difficulty === "extreme") {
+    if (difficulty === "extreme" || difficulty === "marathon") {
       awaitingLossChoice = false;
       state.lost = true;
       showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}. Press R or Restart.`, {
@@ -929,7 +958,7 @@ paddle.y = paddle.baseY;
       console.log("Launching easy mode");
       setStartingLevel(1, "Easy");
     } else if (difficultySetting === "normal") {
-      if (hasDifficulty) {
+      if (hasExplicitDifficulty) {
         console.log("Launching normal mode");
         setStartingLevel(2, "Normal");
       } else {
@@ -942,6 +971,9 @@ paddle.y = paddle.baseY;
     } else if (difficultySetting === "extreme") {
       console.log("Launching extreme mode");
       setStartingLevel(4, "Extreme");
+    } else if (difficultySetting === "marathon") {
+      console.log("Launching marathon mode");
+      setStartingLevel(4, "Marathon");
     } else {
       console.log("Launching normal mode");
       setStartingLevel(1, "Normal");
@@ -1053,7 +1085,7 @@ paddle.y = paddle.baseY ?? paddle.y;
     missiles.length = 0;
     lastMissileShot = 0;
 
-    if (hasDifficulty) {
+    if (hasExplicitDifficulty) {
       openDifficultyLevelChoiceOverlay();
       return;
     }
@@ -2114,7 +2146,7 @@ paddle.assistDisplayDirection = 0;
       missiles.length = 0;
 
       if (state.lives <= 0) {
-        if (hasDifficulty) {
+        if (hasExplicitDifficulty) {
           openDifficultyLevelChoiceOverlay();
           return;
         }
@@ -2150,6 +2182,7 @@ paddle.assistDisplayDirection = 0;
       running = false;
       pausedOnOverlay = true;
       const stats = reportGameOutcome("win");
+      markDifficultyCompletedIfNeeded();
       showOverlay("You Win!", `Cleared level ${state.level} in ${formatElapsed(state.elapsedMs)}.`, {
         buttonLabel: "Try again",
         showExit: true,
