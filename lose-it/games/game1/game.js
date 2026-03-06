@@ -5,6 +5,7 @@
   const livesEl = document.getElementById("lives");
   const timerEl = document.getElementById("timer");
   const restartBtn = document.getElementById("restartBtn");
+  const hudExitBtn = document.getElementById("hudExitBtn");
 
   const overlay = document.getElementById("overlay");
   const overlayTitle = document.getElementById("overlayTitle");
@@ -840,6 +841,10 @@ function movePaddle(clientX) {
 
   restartBtn.addEventListener("click", () => {
     resetGame();
+  });
+
+  hudExitBtn.addEventListener("click", () => {
+    window.location.href = "../../index.html?screen=difficulty&game=Game%201&path=games/game1/index.html";
   });
 
     // --------------------

@@ -32,6 +32,21 @@ let currentMode = "win";
 let selectedGame = "";
 let selectedGamePath = "";
 
+
+function initializeFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const targetScreen = params.get("screen");
+
+  if (targetScreen !== "difficulty") {
+    return;
+  }
+
+  selectedGame = params.get("game") || "Game 1";
+  selectedGamePath = params.get("path") || "games/game1/index.html";
+  difficultyTitle.textContent = selectedGame.toUpperCase();
+  showScreen("difficulty");
+}
+
 modeButtons.forEach((button) => {
   button.addEventListener("click", () => {
     currentMode = button.dataset.mode;
@@ -125,3 +140,4 @@ function updateFromGameResult(mode, result) {
 }
 
 window.updateFromGameResult = updateFromGameResult;
+initializeFromQuery();
