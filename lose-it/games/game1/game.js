@@ -282,7 +282,8 @@ let powerToastDuration = 1200; // ms
     active: false,
     phase: "idle",
     riseSpeed: 1.6,
-    targetYFactor: 0.5
+    targetYFactor: 0.5,
+    hazardHoleDisabledUntil: 0
   };
 
   const paddle = {
@@ -1204,8 +1205,9 @@ function movePaddle(clientX) {
   }
 
 
-  function ballEnteredHazardHole() {
+  function ballEnteredHazardHole(now) {
     if (hazardHoles.length === 0 || ball.stuck) return false;
+    if (resurrection.active || now < resurrection.hazardHoleDisabledUntil) return false;
 
     const bw = brickWidth();
 
@@ -1726,6 +1728,7 @@ function setUpHelpers() {
       if (ball.y <= targetY) {
         resurrection.active = false;
         resurrection.phase = "idle";
+        resurrection.hazardHoleDisabledUntil = now + 300;
         ball.y = targetY;
         ball.vx = (Math.random() < 0.5 ? -1 : 1) * 3.4;
         ball.vy = 4;
@@ -2072,7 +2075,7 @@ for (const hp of helpers) {
     if (!trappedByWell) checkBrickCollisions(now);
 
     // Lose life
-    const hitHazardHole = ballEnteredHazardHole();
+    const hitHazardHole = ballEnteredHazardHole(now);
     const lostByBottom = ball.y - ball.r > h;
 
     if (!resurrection.active && (lostByBottom || hitHazardHole)) {
@@ -2080,6 +2083,7 @@ for (const hp of helpers) {
         state.resurrectionsLeft--;
         resurrection.active = true;
         resurrection.phase = "rising";
+        resurrection.hazardHoleDisabledUntil = Infinity;
         ball.stuck = false;
         ball.speedScale = 1;
         ball.x = clamp(ball.x, ball.r + 2, w - ball.r - 2);
