@@ -759,6 +759,31 @@ paddle.y = paddle.baseY;
     showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}. Press R or Restart.`, { stats });
   }
 
+  function triggerWinOverlay() {
+    if (state.won || state.lost || awaitingLossChoice) return;
+
+    state.won = true;
+    running = false;
+    pausedOnOverlay = true;
+    const stats = reportGameOutcome("win");
+    showOverlay("You Win!", `Cleared level ${state.level} in ${formatElapsed(state.elapsedMs)}.`, {
+      buttonLabel: "Try again",
+      showExit: true,
+      exitLabel: "Exit",
+      showRestore: true,
+      restoreStats: { score: stats.previousScore, streak: stats.previousStreak },
+      stats
+    });
+    clearAllPowers();
+    paddle.playerMaxStep = Infinity;
+    paddle.assistLatched = false;
+    paddle.assistTargetW = paddle.baseWidth;
+    paddle.assistTargetExt = 0;
+    paddle.assistDirection = 0;
+paddle.assistDisplayDirection = 0;
+    missiles.length = 0;
+  }
+
   function beginLevel2(fromTesting = false) {
     awaitingLossChoice = false;
     state.level = 2;
@@ -1176,6 +1201,7 @@ function movePaddle(clientX) {
     if (e.key === "2") beginLevel2(true);
     if (e.key === "3") beginLevel3(true);
     if (e.key === "4") beginLevel4(true);
+    if (e.key.toLowerCase() === "w") triggerWinOverlay();
   });
 
   restoreBtn.addEventListener("click", () => {
@@ -2211,26 +2237,7 @@ paddle.assistDisplayDirection = 0;
 
     // Win
     if (remainingBricks() === 0) {
-      state.won = true;
-      running = false;
-      pausedOnOverlay = true;
-      const stats = reportGameOutcome("win");
-      showOverlay("You Win!", `Cleared level ${state.level} in ${formatElapsed(state.elapsedMs)}.`, {
-        buttonLabel: "Try again",
-        showExit: true,
-        exitLabel: "Exit",
-        showRestore: true,
-        restoreStats: { score: stats.previousScore, streak: stats.previousStreak },
-        stats
-      });
-      clearAllPowers();
-      paddle.playerMaxStep = Infinity;
-      paddle.assistLatched = false;
-      paddle.assistTargetW = paddle.baseWidth;
-      paddle.assistTargetExt = 0;
-      paddle.assistDirection = 0;
-paddle.assistDisplayDirection = 0;
-      missiles.length = 0;
+      triggerWinOverlay();
     }
   }
 
