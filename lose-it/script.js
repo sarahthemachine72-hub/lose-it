@@ -8,6 +8,7 @@ const difficultyBackBtn = document.getElementById("difficulty-back-btn");
 const modeTitle = document.getElementById("mode-title");
 const meterLabel = document.getElementById("meter-label");
 const meterScore = document.getElementById("meter-score");
+const meterTier = document.getElementById("meter-tier");
 const streakCount = document.getElementById("streak-count");
 const meterProgress = document.getElementById("meter-progress");
 
@@ -33,6 +34,11 @@ const appData = {
     score: 0,
     streak: 0
   }
+};
+
+const displayedHubValues = {
+  win: { score: appData.win.score, streak: appData.win.streak },
+  lose: { score: appData.lose.score, streak: appData.lose.streak }
 };
 
 let currentMode = "win";
@@ -84,7 +90,6 @@ function applyLoseModeResult(result = {}) {
   appData.lose.streak = metrics.lossStreak;
 }
 
-
 function initializeFromQuery() {
   const params = new URLSearchParams(window.location.search);
   const requestedMode = params.get("mode");
@@ -100,7 +105,7 @@ function initializeFromQuery() {
     }
   }
 
-  updateHub(currentMode);
+  updateHub(currentMode, { animate: true });
 
   if (targetScreen !== "difficulty") {
     return;
@@ -112,34 +117,76 @@ function initializeFromQuery() {
   showScreen("difficulty");
 }
 
+function getMeterTierText(mode, score) {
+  const tier = clamp(score, 0, 100);
+
+  if (mode === "lose") {
+    if (tier < 20) return "not a loser";
+    if (tier < 40) return "wannabe loser";
+    if (tier < 60) return "loser in training";
+    if (tier < 80) return "disappointing your parents";
+    return "failure is your middle name";
+  }
+
+  if (tier < 20) return "not a winner";
+  if (tier < 40) return "wannabe winner";
+  if (tier < 60) return "winner in training";
+  if (tier < 80) return "making your parents proud";
+  return "winner is your middle name";
+}
+
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function animateNumber(from, to, duration, onUpdate, onDone) {
+  const startedAt = performance.now();
+
+  function step(now) {
+    const progress = Math.min((now - startedAt) / duration, 1);
+    const eased = easeOutCubic(progress);
+    const value = Math.round(from + (to - from) * eased);
+    onUpdate(value);
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+      return;
+    }
+
+    if (onDone) onDone();
+  }
+
+  requestAnimationFrame(step);
+}
+
 modeButtons.forEach((button) => {
   button.addEventListener("click", () => {
     currentMode = button.dataset.mode;
     localStorage.setItem(MODE_STORAGE_KEY, currentMode);
-    updateHub(currentMode);
+    updateHub(currentMode, { animate: true });
     showScreen("hub");
   });
 });
 
 gameTiles.forEach((tile) => {
-    tile.addEventListener("click", () => {
-      selectedGame = tile.dataset.game;
-      selectedGamePath = tile.dataset.path;
-  
-      difficultyTitle.textContent = selectedGame.toUpperCase();
-      showScreen("difficulty");
-    });
+  tile.addEventListener("click", () => {
+    selectedGame = tile.dataset.game;
+    selectedGamePath = tile.dataset.path;
+
+    difficultyTitle.textContent = selectedGame.toUpperCase();
+    showScreen("difficulty");
   });
+});
 
-  difficultyButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const difficulty = button.dataset.difficulty;
+difficultyButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const difficulty = button.dataset.difficulty;
 
-      if (!selectedGamePath) return;
+    if (!selectedGamePath) return;
 
-      window.location.href = `${selectedGamePath}?difficulty=${encodeURIComponent(difficulty)}&mode=${encodeURIComponent(currentMode)}`;
-    });
+    window.location.href = `${selectedGamePath}?difficulty=${encodeURIComponent(difficulty)}&mode=${encodeURIComponent(currentMode)}`;
   });
+});
 
 backBtn.addEventListener("click", () => {
   showScreen("home");
@@ -163,10 +210,11 @@ function showScreen(screenName) {
   }
 }
 
-function updateHub(mode) {
+function updateHub(mode, options = {}) {
+  const { animate = true } = options;
   const data = appData[mode];
-  const score = clamp(data.score, 0, 100);
-  const streak = data.streak;
+  const targetScore = clamp(data.score, 0, 100);
+  const targetStreak = Math.max(0, Math.floor(data.streak));
 
   if (mode === "win") {
     modeTitle.textContent = "WIN MODE";
@@ -178,11 +226,33 @@ function updateHub(mode) {
     meterProgress.style.stroke = "var(--accent-lose)";
   }
 
-  meterScore.textContent = score;
-  streakCount.textContent = streak;
+  const displayed = displayedHubValues[mode] || { score: targetScore, streak: targetStreak };
+  const fromScore = displayed.score;
+  const fromStreak = displayed.streak;
 
-  const dashOffset = 100 - score;
-  meterProgress.style.strokeDashoffset = dashOffset;
+
+  if (!animate) {
+    meterScore.textContent = String(targetScore);
+    meterTier.textContent = getMeterTierText(mode, targetScore);
+    streakCount.textContent = String(targetStreak);
+    meterProgress.style.strokeDashoffset = String(100 - targetScore);
+    displayedHubValues[mode] = { score: targetScore, streak: targetStreak };
+    return;
+  }
+
+  animateNumber(fromScore, targetScore, 650, (value) => {
+    meterScore.textContent = String(value);
+    meterTier.textContent = getMeterTierText(mode, value);
+    meterProgress.style.strokeDashoffset = String(100 - clamp(value, 0, 100));
+  }, () => {
+    displayedHubValues[mode].score = targetScore;
+  });
+
+  animateNumber(fromStreak, targetStreak, 650, (value) => {
+    streakCount.textContent = String(value);
+  }, () => {
+    displayedHubValues[mode].streak = targetStreak;
+  });
 }
 
 function clamp(value, min, max) {
@@ -205,7 +275,7 @@ function updateFromGameResult(mode, result) {
   }
 
   if (mode === currentMode) {
-    updateHub(currentMode);
+    updateHub(currentMode, { animate: true });
   }
 }
 
@@ -213,7 +283,7 @@ window.updateFromGameResult = updateFromGameResult;
 window.addEventListener("storage", (event) => {
   if (event.key !== METRICS_STORAGE_KEY) return;
   syncLoseModeFromStorage();
-  if (currentMode === "lose") updateHub("lose");
+  if (currentMode === "lose") updateHub("lose", { animate: true });
 });
 
 syncLoseModeFromStorage();

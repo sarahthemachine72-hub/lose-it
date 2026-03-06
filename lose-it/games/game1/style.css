@@ -170,6 +170,15 @@ body {
   color: rgba(255, 230, 236, 0.78);
 }
 
+.overlayMeter__tier {
+  margin-top: 4px;
+  font-size: 0.65rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(255, 230, 236, 0.92);
+  max-width: 160px;
+}
+
 .cardFeatures {
   display: none;
   margin: 8px 0 14px;
