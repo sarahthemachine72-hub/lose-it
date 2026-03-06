@@ -89,6 +89,10 @@
       })
     );
 
+    if (outcome === "loss") {
+      markDifficultyCompletedIfNeeded();
+    }
+
     return {
       score: nextScore,
       streak: nextStreak,
@@ -681,9 +685,38 @@ paddle.y = paddle.baseY;
   function openDifficultyLevelChoiceOverlay() {
     running = false;
     pausedOnOverlay = true;
+
+    if (difficulty === "marathon") {
+      if (state.level < 4) {
+        awaitingLossChoice = true;
+        const levelsRemaining = 4 - state.level;
+        showOverlay(
+          "Congratulations!",
+          `you have passed level ${state.level}/4, only ${levelsRemaining} to go...`,
+          {
+            buttonLabel: "Proceed to Next Level",
+            showExit: true,
+            exitLabel: "Exit"
+          }
+        );
+        return;
+      }
+
+      awaitingLossChoice = false;
+      state.lost = true;
+      const stats = reportGameOutcome("loss");
+      showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}. Press R or Restart.`, {
+        showStart: false,
+        showExit: true,
+        exitLabel: "Exit",
+        stats
+      });
+      return;
+    }
+
     const stats = reportGameOutcome("loss");
 
-    if (difficulty === "extreme" || difficulty === "marathon") {
+    if (difficulty === "extreme") {
       awaitingLossChoice = false;
       state.lost = true;
       showOverlay("Game Over", `You survived ${formatElapsed(state.elapsedMs)}. Press R or Restart.`, {
@@ -973,7 +1006,7 @@ paddle.y = paddle.baseY;
       setStartingLevel(4, "Extreme");
     } else if (difficultySetting === "marathon") {
       console.log("Launching marathon mode");
-      setStartingLevel(4, "Marathon");
+      setStartingLevel(1, "Marathon");
     } else {
       console.log("Launching normal mode");
       setStartingLevel(1, "Normal");
@@ -2182,7 +2215,6 @@ paddle.assistDisplayDirection = 0;
       running = false;
       pausedOnOverlay = true;
       const stats = reportGameOutcome("win");
-      markDifficultyCompletedIfNeeded();
       showOverlay("You Win!", `Cleared level ${state.level} in ${formatElapsed(state.elapsedMs)}.`, {
         buttonLabel: "Try again",
         showExit: true,

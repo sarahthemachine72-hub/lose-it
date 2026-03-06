@@ -352,13 +352,14 @@ body {
 .difficulty-btn {
   position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 4px;
 }
 
 .difficulty-label {
   letter-spacing: 0.5px;
+  padding-right: 84px;
 }
 
 .difficulty-tick {
@@ -371,14 +372,24 @@ body {
   display: none;
 }
 
+.difficulty-lock-wrap {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .difficulty-lock {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 2px solid rgba(244, 244, 245, 0.6);
   display: grid;
   place-items: center;
-  font-size: 1rem;
+  font-size: 0.9rem;
   line-height: 1;
 }
 
@@ -389,8 +400,7 @@ body {
   font-weight: 700;
 }
 
-.difficulty-btn.is-unlocked .difficulty-lock,
-.difficulty-btn.is-unlocked .difficulty-unlock-text {
+.difficulty-btn.is-unlocked .difficulty-lock-wrap {
   display: none;
 }
 
