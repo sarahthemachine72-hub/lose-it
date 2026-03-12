@@ -1292,7 +1292,11 @@ function movePaddle(clientX) {
     }
 
     if (state.won) {
-      resetGame();
+      if (difficulty === "marathon") {
+        resetGame();
+      } else {
+        restartCurrentLevel();
+      }
       return;
     }
 
