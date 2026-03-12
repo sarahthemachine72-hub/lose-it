@@ -430,9 +430,9 @@ let lastMissileShot = 0;
 // POWER UPS
 // --------------------
 const powerups = []; // falling items
-const POWERUP_SIZE = 18;
+const POWERUP_SIZE = 25;
 
-const POWER_DURATION = 10000; // 10s
+
 const RESPAWN_GLOW_HOLD_MS = 2200;
 const RESPAWN_GLOW_FADE_MS = 700;
 
@@ -490,8 +490,8 @@ paddle.playerMaxStep = Infinity; // px/frame movement cap (slow move uses this)
 
 function getPowerDuration(type) {
 
-  if (type === PowerType.MAX_PADDLE) return 3000;
-  if (type === PowerType.SLOW_MOVE) return 4000;
+  if (type === PowerType.MAX_PADDLE) return 4000;
+  if (type === PowerType.SLOW_MOVE) return 3000;
 
   return 10000;
 
