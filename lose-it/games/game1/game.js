@@ -446,6 +446,25 @@ const PowerType = {
   RESPAWN_BOXES: "RESPAWN_BOXES"
 };
 
+// Set each non-respawn powerup image path here.
+// These should point to files in games/game1/images/.
+const POWERUP_IMAGE_LINKS = {
+  [PowerType.MAX_PADDLE]: "images/max-paddle.png",
+  [PowerType.SLOW_MOVE]: "images/slow-move.png",
+  [PowerType.REDUCE_HELPERS]: "images/reduce-helpers.png",
+  [PowerType.ENLARGE_HELPERS]: "images/enlarge-helpers.png",
+  [PowerType.LESS_MISSILES]: "images/less-missiles.png",
+  [PowerType.MORE_MISSILES]: "images/more-missiles.png"
+};
+
+const powerupImages = {};
+
+for (const [type, src] of Object.entries(POWERUP_IMAGE_LINKS)) {
+  const img = new Image();
+  img.src = src;
+  powerupImages[type] = img;
+}
+
 const PowerName = {
   [PowerType.MAX_PADDLE]: "MAX PADDLE (4x cap)",
   [PowerType.SLOW_MOVE]: "SLOW MOVE",
@@ -2528,20 +2547,29 @@ if (helpers.length) {
 
     if (!resurrectionRising) drawBall();
 
-  // Powerups ( ? boxes )
+  // Powerups (image icons, except respawn)
 for (const p of powerups) {
   if (!p.alive) continue;
 
   const s = p.size || POWERUP_SIZE;
   const isRespawn = p.type === PowerType.RESPAWN_BOXES;
 
+  const drawX = p.x - s / 2;
+  const drawY = p.y - s / 2;
+
   ctx.fillStyle = isRespawn ? "rgba(84,165,255,0.95)" : "rgba(255,255,255,0.9)";
-  ctx.fillRect(p.x - s/2, p.y - s/2, s, s);
+  ctx.fillRect(drawX, drawY, s, s);
 
   if (isRespawn) {
     ctx.strokeStyle = "rgba(200,230,255,0.95)";
     ctx.lineWidth = 2;
-    ctx.strokeRect(p.x - s/2 + 1, p.y - s/2 + 1, s - 2, s - 2);
+    ctx.strokeRect(drawX + 1, drawY + 1, s - 2, s - 2);
+  } else {
+    const img = powerupImages[p.type];
+    if (img?.complete && img.naturalWidth > 0) {
+      ctx.drawImage(img, drawX, drawY, s, s);
+      continue;
+    }
   }
 
   ctx.fillStyle = isRespawn ? "rgba(235,247,255,0.95)" : "rgba(0,0,0,0.75)";
