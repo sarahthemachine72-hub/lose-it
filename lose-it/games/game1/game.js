@@ -449,12 +449,12 @@ const PowerType = {
 // Set each non-respawn powerup image path here.
 // These should point to files in games/game1/images/.
 const POWERUP_IMAGE_LINKS = {
-  [PowerType.MAX_PADDLE]: "images/max-paddle.png",
-  [PowerType.SLOW_MOVE]: "images/slow-move.png",
-  [PowerType.REDUCE_HELPERS]: "images/reduce-helpers.png",
-  [PowerType.ENLARGE_HELPERS]: "images/enlarge-helpers.png",
-  [PowerType.LESS_MISSILES]: "images/less-missiles.png",
-  [PowerType.MORE_MISSILES]: "images/more-missiles.png"
+  [PowerType.MAX_PADDLE]: "images/maxpaddle.png",
+  [PowerType.SLOW_MOVE]: "images/slowmove.png",
+  [PowerType.REDUCE_HELPERS]: "images/smallhelpers.png",
+  [PowerType.ENLARGE_HELPERS]: "images/largehelpers.png",
+  [PowerType.LESS_MISSILES]: "images/lessmissiles.png",
+  [PowerType.MORE_MISSILES]: "images/moremissiles.png"
 };
 
 const powerupImages = {};
