@@ -293,6 +293,9 @@
   let levelBriefingPending = false;
   let awaitingLossChoice = false;
   let awaitingExitWinChoice = false;
+  let hasReleasedBallOnce = false;
+  let interruptedOverlayState = null;
+  let currentOverlayState = null;
   let targetCenterX = 0; // where the cursor/finger wants the paddle center to be
   let powerToastText = "";
 let powerToastStart = 0;
@@ -764,6 +767,16 @@ paddle.y = paddle.baseY;
   function openExitWinChoiceOverlay() {
     if (state.won || state.lost || awaitingLossChoice || awaitingExitWinChoice) return;
 
+    if (!overlay.classList.contains("is-hidden") && currentOverlayState) {
+      interruptedOverlayState = {
+        title: currentOverlayState.title,
+        subtitle: currentOverlayState.subtitle,
+        options: { ...currentOverlayState.options }
+      };
+    } else {
+      interruptedOverlayState = null;
+    }
+
     running = false;
     pausedOnOverlay = true;
     awaitingExitWinChoice = true;
@@ -958,6 +971,11 @@ paddle.y = paddle.baseY;
     renderOverlayStats(options.stats || null, { delayAnimation: options.delayStatsAnimation !== false });
     renderOverlayFeatures(options.features || []);
     overlay.classList.remove("is-hidden");
+    currentOverlayState = {
+      title,
+      subtitle,
+      options: { ...options }
+    };
 
     if (wasHidden && state.startTimeMs !== null && state.overlayShownAtMs === null) {
       state.overlayShownAtMs = now;
@@ -975,6 +993,7 @@ paddle.y = paddle.baseY;
     }
 
     overlay.classList.add("is-hidden");
+    currentOverlayState = null;
   }
 
   function handleGameStart() {
@@ -1005,6 +1024,7 @@ paddle.y = paddle.baseY;
     }
 
     ball.stuck = false;
+    hasReleasedBallOnce = true;
   }
 
   function setStartingLevel(level, modeLabel) {
@@ -1017,6 +1037,7 @@ paddle.y = paddle.baseY;
     state.overlayShownAtMs = null;
     state.won = false;
     state.lost = false;
+    hasReleasedBallOnce = false;
 
     livesEl.textContent = "5";
     timerEl.textContent = "00:00";
@@ -1074,6 +1095,7 @@ paddle.y = paddle.baseY;
     state.overlayShownAtMs = null;
     state.won = false;
     state.lost = false;
+    hasReleasedBallOnce = false;
     resurrection.active = false;
     resurrection.phase = "idle";
 
@@ -1140,6 +1162,7 @@ paddle.y = paddle.baseY ?? paddle.y;
 
     pausedOnOverlay = false;
     running = true;
+    hasReleasedBallOnce = false;
 
     const now = performance.now();
     state.startTimeMs = now;
@@ -1154,6 +1177,7 @@ paddle.y = paddle.baseY ?? paddle.y;
     }
 
     ball.stuck = false;
+    hasReleasedBallOnce = true;
   }
 
   function triggerInstantLoss() {
@@ -1215,6 +1239,7 @@ function movePaddle(clientX) {
 
     if (state.level === 4 && ball.stuck && running) {
       ball.stuck = false;
+      hasReleasedBallOnce = true;
     }
   });
 
@@ -1284,6 +1309,15 @@ function movePaddle(clientX) {
 
     if (awaitingExitWinChoice) {
       awaitingExitWinChoice = false;
+      if (interruptedOverlayState) {
+        const { title, subtitle, options } = interruptedOverlayState;
+        interruptedOverlayState = null;
+        showOverlay(title, subtitle, options);
+        pausedOnOverlay = true;
+        running = false;
+        return;
+      }
+
       hideOverlay();
       pausedOnOverlay = false;
       running = true;
@@ -1295,11 +1329,22 @@ function movePaddle(clientX) {
       return;
     }
 
+    if (!hasReleasedBallOnce) {
+      navigateToDifficultyScreen();
+      return;
+    }
+
     openExitWinChoiceOverlay();
   });
 
   hudExitBtn.addEventListener("click", () => {
     if (state.won || state.lost || awaitingLossChoice || awaitingExitWinChoice) return;
+
+    if (!hasReleasedBallOnce) {
+      navigateToDifficultyScreen();
+      return;
+    }
+
     openExitWinChoiceOverlay();
   });
 
