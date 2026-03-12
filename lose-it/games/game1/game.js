@@ -520,7 +520,7 @@ function pickPowerType(helpersActive, missilesActive) {
   if (state.level >= 2) {
     pool.push(PowerType.RESPAWN_BOXES);
 
-    if (remainingBricks() < 5) {
+    if (remainingBricks() < 10) {
       // Weight respawn powerups more heavily in late-round cleanup.
       pool.push(PowerType.RESPAWN_BOXES);
     }
@@ -1683,7 +1683,7 @@ function setUpHelpers() {
 
   function activatePower(type, now) {
     if (type === PowerType.RESPAWN_BOXES) {
-      respawnRandomBricks(2, now);
+      respawnRandomBricks(3, now);
       return;
     }
 
